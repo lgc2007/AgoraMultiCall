@@ -1,3 +1,11 @@
+<!--
+ * @Description: 
+ * @Version: 2.0
+ * @Autor: lgc
+ * @Date: 2022-05-19 15:04:26
+ * @LastEditors: lgc
+ * @LastEditTime: 2022-05-20 14:51:24
+-->
 <template>
   <ar-button @click="handleClick"/>
 </template>
@@ -22,7 +30,7 @@ export default {
   background-image: url("../../assets/jieting.svg");
   &:hover{
     &:before{
-      content: "Join Meeting";
+      content: "加入会议";
      }
    }
 }

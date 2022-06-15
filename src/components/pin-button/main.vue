@@ -1,3 +1,11 @@
+<!--
+ * @Description: 
+ * @Version: 2.0
+ * @Autor: lgc
+ * @Date: 2022-05-19 15:04:26
+ * @LastEditors: lgc
+ * @LastEditTime: 2022-05-26 15:26:20
+-->
 <template>
   <div
     class="agora-pin-button"
@@ -45,7 +53,7 @@ export default {
   &.pined{
     &:hover{
       &:after{
-        content: "Cancel Pin";
+        content: "取消置顶";
         width: 8em
       }
     }
@@ -58,7 +66,7 @@ export default {
       left: 50%
       transform translateX(-50%)
       display: block
-      content: "Pin";
+      content: "置顶";
       background-color: rgba(30,30,30,0.8);
       color: white
       padding: 2px;

@@ -1,3 +1,11 @@
+<!--
+ * @Description: 
+ * @Version: 2.0
+ * @Autor: lgc
+ * @Date: 2022-05-19 15:04:26
+ * @LastEditors: lgc
+ * @LastEditTime: 2022-05-20 14:48:04
+-->
 <template>
   <ar-button @click="handleClick"/>
 </template>
@@ -40,7 +48,7 @@ export default {
   &:hover{
     box-shadow none;
     &:before{
-      content: "Switch Camera";
+      content: "开关摄像头";
      }
    }
 }

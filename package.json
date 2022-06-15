@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --https",
+    "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
@@ -11,9 +11,14 @@
   "dependencies": {
     "agora-rtc-sdk-ng": "^4.4.0",
     "agora-rtc-vue": "^0.2.45",
+    "axios": "^0.27.2",
     "core-js": "^3.6.5",
+    "element-ui": "^2.15.6",
+    "js-cookie": "^3.0.1",
+    "jsencrypt": "^3.2.1",
     "vue": "^2.6.11",
-    "vue-router": "^3.2.0"
+    "vue-router": "3.0.6",
+    "vuex": "3.1.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
@@ -28,6 +33,8 @@
     "eslint-plugin-prettier": "^3.1.3",
     "eslint-plugin-vue": "^6.2.2",
     "prettier": "^1.19.1",
+    "sass": "1.26.2",
+    "sass-loader": "8.0.2",
     "stylus": "^0.54.7",
     "stylus-loader": "^3.0.2",
     "vue-template-compiler": "^2.6.11"

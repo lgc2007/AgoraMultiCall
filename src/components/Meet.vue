@@ -6,51 +6,53 @@
         :channel="channel"
         :appid="appid"
         :token="token"
-        :autoStart="true"
-        :errorHandler="handleError"
+        :uid="userId"
+        :auto-start="true"
+        :error-handler="handleError"
+        enable-dual-stream
+        @rtc-loaded="handleUserLoaded"
         @user-joined="handleUserJoin"
         @user-published="handleUserPublished"
         @user-left="handleUserLeft"
         @join-success="handleJoinSuccess"
         @client-created="handleClientCreated"
         @stream-fallback="handleStreamFallback"
-        enableDualStream
       >
         <agora-audio-sender
+          ref="audioSender"
           :mute="mute"
           @track-created="handleAudioTrackCreated"
-          ref="audioSender"
         ></agora-audio-sender>
         <agora-audio-receiver ref="audioReceiver" :refuse="refuseList" />
         <agora-video-sender
-          :cameraOff="cameraIsClosed"
-          customizationPlayer
           ref="videoSender"
+          :camera-off="cameraIsClosed"
+          customization-player
           @video-ready="handleVideoReady"
           @video-close="handleVideoClose"
         ></agora-video-sender>
         <agora-video-receiver
-          customizationPlayer
-          @video-ready="handleRemoteVideoReady"
+          customization-player
           :refuse="refuseList"
+          @video-ready="handleRemoteVideoReady"
         ></agora-video-receiver>
       </agora>
-      <agora
+      <!-- <agora
         v-if="openScreenSharing"
+        ref="screenAr"
         :channel="channel"
         :appid="appid"
         :token="token"
         :uid="shareScreenUID"
-        ref="screenAr"
       >
         <agora-video-sender
-          customizationPlayer
+          customization-player
           type="screen"
           @video-ready="handleScreenVideoReady"
           @video-close="handleScreenVideoClose"
           @video-create-failed="handleScreenVideoFailed"
         ></agora-video-sender>
-      </agora>
+      </agora> -->
     </div>
     <div
       class="player"
@@ -59,30 +61,30 @@
       }"
     >
       <div
+        v-for="user_id in userIdList"
+        :key="user_id"
         class="user-vision"
         :class="{
           'screen-share-vision': user_id === shareScreenUID,
           'screen-share-vision-pined':
             user_id === shareScreenUID && user_id === pinedUid
         }"
-        v-for="user_id in userIdList"
-        :key="user_id"
       >
         <div
           v-if="playList.find(e => e.uid === user_id)"
+          v-show="!streamFallbackList.includes(user_id)"
           v-player="playList.find(e => e.uid === user_id)"
           class="player-vision"
-          v-show="!streamFallbackList.includes(user_id)"
         ></div>
         <div class="ban">
           <pin-button
-            :couldHover="false"
             v-if="pined && user_id === pinedUid"
+            :could-hover="false"
           />
           <voice-dot
             :level="
               audioStatusObj[user_id || uid] &&
-              audioStatusObj[user_id || uid].level
+                audioStatusObj[user_id || uid].level
                 ? audioStatusObj[user_id || uid].level
                 : 0
             "
@@ -100,7 +102,7 @@
           avatar="../assets/yonghu.svg"
           :level="
             audioStatusObj[user_id || uid] &&
-            audioStatusObj[user_id || uid].level
+              audioStatusObj[user_id || uid].level
               ? audioStatusObj[user_id || uid].level
               : 0
           "
@@ -108,7 +110,7 @@
             audioStatusObj[user_id || uid] &&
               audioStatusObj[user_id || uid].mute !== false
           "
-          :cameraOff="!playList.find(e => e.uid === user_id) || streamFallbackList.includes(user_id)"
+          :camera-off="!playList.find(e => e.uid === user_id) || streamFallbackList.includes(user_id)"
         />
         <div class="central">
           <pin-button
@@ -123,7 +125,7 @@
     </div>
     <div class="notify">
       <div class="remote-user" @click="handleExpandUserList">
-        User: {{ users.length }}
+        用户: {{ users.length }}
       </div>
       <div class="local-user">
         <div class="local-camera-player">
@@ -134,23 +136,23 @@
           />
           <video
             v-show="!cameraIsClosed"
+            ref="localCameraPlayer"
             autoplay
             mute
-            ref="localCameraPlayer"
           ></video>
           <img v-show="cameraIsClosed" src="../assets/yonghu.svg" alt="" />
         </div>
       </div>
     </div>
-    <div class="user-list" v-show="showExpandUserList">
-      <p @click="handleCustom">All users in the meeting :</p>
+    <div v-show="showExpandUserList" class="user-list">
+      <p @click="handleCustom">参加会议的所有用户 :</p>
       <ul>
         <li v-for="(item, index) in users" :key="index">
           <voice-dot
             class="audio-dot-local"
             :level="
               audioStatusObj[item.uid || uid] &&
-              audioStatusObj[item.uid || uid].level
+                audioStatusObj[item.uid || uid].level
                 ? audioStatusObj[item.uid || uid].level
                 : 0
             "
@@ -172,7 +174,7 @@
     </div>
     <div class="banner">
       <div class="test-button" @click="handleOpenNewPage">
-        (test) open new page
+        （测试）打开新页面
       </div>
       <mp-button :class="microphoneClass" @click="handleMute" />
       <on-call-button v-if="!inMeeting" @click="handleCall" />
@@ -181,10 +183,10 @@
       <div class="share-screen-button" @click="handleShareScreen">
         {{
           youAreShareScreening
-            ? "You are Sharing"
+            ? "你在共享"
             : otherIsShareScreening
-            ? "Other is Sharing"
-            : "Share Screen"
+              ? "其它共享"
+              : "共享屏幕"
         }}
       </div>
     </div>
@@ -192,16 +194,17 @@
 </template>
 
 <script>
-import MpButton from "./buttons/mp-button";
-import CloseButton from "./buttons/close-button";
-import OnCallButton from "./buttons/on-call-button";
-import VideoButton from "./buttons/video-button";
-import VoiceDot from "./voice-dot/main";
-import AvatarAudio from "./avatar-audio/main";
-import PinButton from "./pin-button/main";
+import MpButton from './buttons/mp-button';
+import CloseButton from './buttons/close-button';
+import OnCallButton from './buttons/on-call-button';
+import VideoButton from './buttons/video-button';
+import VoiceDot from './voice-dot/main';
+import AvatarAudio from './avatar-audio/main';
+import PinButton from './pin-button/main';
+import { meetingTurn, exit } from '@/api/url';
 
 export default {
-  name: "Meet",
+  name: 'Meet',
   components: {
     MpButton,
     CloseButton,
@@ -232,7 +235,7 @@ export default {
   },
   data() {
     return {
-      mute: false,
+      mute: false, // 是否开启静音 (即本地音频收集和播放(如果开启了monitor),并停止向远端发送音频流)
       handleError: error => {
         this.$message.error(error.message || error);
       },
@@ -251,34 +254,44 @@ export default {
       pinedUid: null,
       openScreenSharing: false,
       youAreShareScreening: false,
-      shareScreenUID: 99991234,
+      shareScreenUID: 630796919,
       streamFallbackList: []
     };
   },
   computed: {
+    userId() {
+      return this.$store.state.user.userId;
+    },
+    secretKey() {
+      return this.$store.state.user.secretKey;
+    },
+    salt() {
+      return this.$store.state.user.salt;
+    },
     refuseList() {
+      // 拒绝其音频媒体流的远端用户的UID列表
       return this.openScreenSharing ? [this.shareScreenUID] : [];
     },
     microphoneClass() {
-      return this.mute ? "mp-mute" : "mp-normal";
+      return this.mute ? 'mp-mute' : 'mp-normal';
     },
     cameraClass() {
-      return this.cameraIsClosed ? "video-mute" : "video-normal";
+      return this.cameraIsClosed ? 'video-mute' : 'video-normal';
     },
     users() {
-      let result = [...this.remoteUsers];
-      result.unshift(this.uid ? this.uid + "(you)" : "you");
+      const result = [...this.remoteUsers];
+      result.unshift(this.uid ? this.uid + '(你)' : '你');
       this.youAreShareScreening && result.unshift(this.shareScreenUID);
       return result;
     },
     userList() {
-      let result = [...this.remoteUsers];
+      const result = [...this.remoteUsers];
       this.uid && result.unshift(this.uid);
       this.youAreShareScreening && result.unshift(this.shareScreenUID);
       return result;
     },
     unpinedUserIdList() {
-      let result = [...this.remoteUsers.map(user => user.uid)];
+      const result = [...this.remoteUsers.map(user => user.uid)];
       this.uid && result.unshift(this.uid);
       this.youAreShareScreening && result.unshift(this.shareScreenUID);
       return result;
@@ -290,7 +303,7 @@ export default {
       return this.unpinedUserIdList;
     },
     playList() {
-      let result = [...this.remoteDirectiveList];
+      const result = [...this.remoteDirectiveList];
       this.localDirective && result.unshift(this.localDirective);
       this.localScreenDirective && result.unshift(this.localScreenDirective);
       return result;
@@ -319,14 +332,14 @@ export default {
     audioStatusObj() {
       return this.localVolumeLevel || this.localVolumeLevel === 0
         ? {
-            ...{
-              [this.uid]: { level: this.localVolumeLevel, mute: this.mute }
-            },
-            ...this.remoteAudioStatusObj
-          }
+          ...{
+            [this.uid]: { level: this.localVolumeLevel, mute: this.mute }
+          },
+          ...this.remoteAudioStatusObj
+        }
         : {
-            ...this.remoteAudioStatusObj
-          };
+          ...this.remoteAudioStatusObj
+        };
     },
     otherIsShareScreening() {
       return (
@@ -355,20 +368,56 @@ export default {
       console.log(tracks);
     },
     handleJoinSuccess(uid) {
+      console.log('成功加入会议');
+      // 加入频道成功的事件
       this.inMeeting = true;
       this.uid = uid;
-      this.$message.success("Join the meeting successfully");
+      this.$message.success('成功加入会议');
+    },
+    base64ToUint8Array(base64Str) {
+      // 声明一个工具函数，用于将 Base64 转换成 Uint8Array。
+      const raw = window.atob(base64Str);
+      const result = new Uint8Array(new ArrayBuffer(raw.length));
+
+      for (let i = 0; i < raw.length; i += 1) {
+        result[i] = raw.charCodeAt(i);
+      }
+
+      return result;
+    },
+    hex2ascii(hexx) {
+      // 声明一个工具函数，用于将 Hex 转换成 ASCII。
+      const hex = hexx.toString();// force conversion
+      let str = '';
+      for (let i = 0; i < hex.length; i += 2) { str += String.fromCharCode(parseInt(hex.substr(i, 2), 16)); }
+      return str;
+    },
+    handleUserLoaded(aaa) {
+      // SDK加载完成，此时可以读取 AgoraRTC 对象, 在此之前调用 getAgoraRTC 是拿不到 AgoraRTC 对象的。
+      // this.$refs.ar.getClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
+      this.$refs.ar.AgoraRTC.createClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
+      console.log('SDK加载完成:', aaa);
     },
     handleClientCreated() {
+      // client创建完成的事件。此时已完成client的创建，client上事件的监听，以及直播状态下角色的设置。
+      console.log('refffffffffffffff:', this.$refs.ar.getClient());
+      this.$refs.ar.getClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
       window._agMeet = this;
       window._client = this.$refs.ar.getClient();
       window._AgoraRTC = this.$refs.ar.getAgoraRtc();
       window._sClient = this.$refs?.screenAr?.getClient();
       // client.setStreamFallbackOption()
     },
-    handleMute() {
+    handleMute() { // 开关麦克风
+      meetingTurn({
+        'id': '770ul2o4',
+        'agoraType': 'AUDIO', // 音频AUDIO，视频VIDEO
+        'state': this.mute ? 1 : 0		// 0关闭，1开启
+      }).then(({ obj }) => {
+        console.log(obj);
+      });
       this.mute = !this.mute;
-      this.$message(`Microphone Turned ${this.mute ? "OFF" : "ON"}`);
+      this.$message(`Microphone Turned ${this.mute ? 'OFF' : 'ON'}`);
     },
     playLocalVideoOnTopBanner() {
       const videoTrack = this.$refs.videoSender
@@ -378,40 +427,54 @@ export default {
     },
     handleCall() {
       if (this.inMeeting) {
-        this.$message.error("You are already in the meeting");
+        this.$message.error('你已经在会议了');
         return;
       }
       this.$refs.ar.start().then(({ result, message }) => {
         if (!result) {
-          this.$message.error("join channel error", message);
+          this.$message.error('加入频道错误', message);
         }
       });
     },
     handleLeave() {
       if (!this.inMeeting) {
-        this.$message.error("You have not joined any meetings");
+        this.$message.error('您没有参加任何会议');
         return;
       }
-      this.$refs.ar.leave().then(() => {
-        this.inMeeting = false;
-        this.remoteUsers = [];
-        this.uid = null;
-        this.$message.success("Left the meeting successfully");
-        this.$emit("leave-meeting");
+      exit({
+        id: '770ul2o4',
+      }).then(({ obj }) => {
+        if (obj) {
+          this.$refs.ar.leave().then(() => {
+            this.inMeeting = false;
+            this.remoteUsers = [];
+            this.uid = null;
+            this.$message.success('成功离开会议');
+            this.$emit('leave-meeting');
+          });
+        }
       });
     },
-    handleCamera() {
+    handleCamera(val) { // 开关摄像头
+      meetingTurn({
+        'id': '770ul2o4',
+        'agoraType': 'VIDEO', // 音频AUDIO，视频VIDEO
+        'state': this.cameraIsClosed ? 1 : 0		// 0关闭，1开启
+      }).then(({ obj }) => {
+        console.log(obj);
+      });
       this.cameraIsClosed = !this.cameraIsClosed;
-      this.$message(`Camera Turned ${this.cameraIsClosed ? "OFF" : "ON"}`);
+      this.$message(`相机 ${this.cameraIsClosed ? '关' : '开'}`);
     },
     handleUserJoin(user) {
-      this.$message(`${user.uid} join meeting`);
+      // 远端用户或主播加入频道的事件
+      this.$message(`${user.uid} 加入会议`);
 
-      // weak net fallback
+      // 弱网路回退
       this.$refs.ar.getClient().setStreamFallbackOption(user.uid, 2);
 
-      // if you are sharing your screen,
-      // you need not subscribe the screen video of yourself.
+      // 如果要共享屏幕
+      // 无需订阅自己的屏幕视频
       this.remoteUsers = this.$refs.ar
         .getRemoteUsers()
         .filter(
@@ -420,14 +483,15 @@ export default {
       this.handleCheckRemoteUserAudioMuteStatus();
     },
     handleUserPublished(user, mediaType) {
-      console.log("user published ", mediaType, user.uid);
+      console.log('user published:远端用户发布了新的音频轨道或者视频轨道的事件 ', mediaType, user.uid);
 
-      if (mediaType === "audio") {
+      if (mediaType === 'audio') {
         this.handleGetRemoteVolumeLevelList();
       }
     },
     handleUserLeft(user, reason) {
-      this.$message(`${user.uid} left meeting because ${reason}`);
+      // 远端用户离线的事件
+      this.$message(`${user.uid} 离开了会议 ${reason}`);
       this.remoteUsers = this.$refs.ar
         .getRemoteUsers()
         .filter(
@@ -443,7 +507,8 @@ export default {
       this.showExpandUserList = !this.showExpandUserList;
     },
     handleVideoReady(localVideo, info) {
-      console.log("video-ready trigger:", info);
+      // 本地用户视频ready事件，本地视频流创建成功，可以在本地播放时触发该事件。
+      console.log('video-ready 触发:', info);
       this.localDirective = localVideo;
       this.playLocalVideoOnTopBanner();
     },
@@ -452,6 +517,7 @@ export default {
       this.localScreenDirective = screenVideo;
     },
     handleVideoClose() {
+      // 本地视频流close(指不再向远端发送视频流)时触发该事件
       this.localDirective = null;
     },
     handleScreenVideoClose() {
@@ -463,10 +529,12 @@ export default {
       this.openScreenSharing = false;
     },
     handleRemoteVideoReady(remoteUserList) {
+      // 远端用户视频ready事件，每当有用户进入或退出频道导致有新视频加入，或视频退出时均触发该事件。
       this.remoteDirectiveList = remoteUserList;
     },
     handleAudioTrackCreated() {
-      let id = undefined;
+      // 音频创建完成的事件。
+      let id;
       const audioSender = this.$refs.audioSender;
       const callback = () => {
         try {
@@ -482,31 +550,31 @@ export default {
         }
       };
       id = window.requestAnimationFrame(callback);
-      this.$once("hook:beforeDestroy", () => {
+      this.$once('hook:beforeDestroy', () => {
         window.cancelAnimationFrame(id);
       });
     },
     handleGetRemoteVolumeLevelList() {
-      let id = undefined;
+      let id;
       const audioReceiver = this?.$refs?.audioReceiver;
       const callback = () => {
         this.remoteVolumeLevelList = audioReceiver?.getVolumeLevel();
         id = window.requestAnimationFrame(callback);
       };
       id = window.requestAnimationFrame(callback);
-      this.$once("hook:beforeDestroy", () => {
+      this.$once('hook:beforeDestroy', () => {
         window.cancelAnimationFrame(id);
       });
     },
     handleCheckRemoteUserAudioMuteStatus() {
-      let id = undefined;
+      let id;
       const audioReceiver = this?.$refs?.audioReceiver;
       const callback = () => {
         this.remoteMuteStatus = audioReceiver?.getUserMuteStatus();
         id = window.requestAnimationFrame(callback);
       };
       id = window.requestAnimationFrame(callback);
-      this.$once("hook:beforeDestroy", () => {
+      this.$once('hook:beforeDestroy', () => {
         window.cancelAnimationFrame(id);
       });
     },
@@ -525,19 +593,20 @@ export default {
           this.$message.warning(`other is sharing, and you will replace him.`);
         }
       } else {
-        this.$message(`you will quit screen sharing.`);
+        this.$message(`您将要退出共享`);
       }
       this.openScreenSharing = !this.openScreenSharing;
     },
     handleStreamFallback(uid, type) {
+      // 订阅的音视频流回退为音频流或恢复为音视频流回调
       const list = this.streamFallbackList;
-      console.log(`[Agora Web Multi-party Call Demo.Vue] : stream fallback: uid ${uid}, type: ${type}`)
-      if (type === "recover") {
+      console.log(`流回退: uid ${uid}, type: ${type}`);
+      if (type === 'recover') {
         this.streamFallbackList = list.filter(e => e !== uid);
-      } else if (type === "fallback") {
+      } else if (type === 'fallback') {
         this.streamFallbackList = [...new Set([...list, uid])];
       } else {
-        this.$message.error("stream fallback type error");
+        this.$message.error('流回退类型错误');
       }
     }
   }

@@ -1,3 +1,11 @@
+<!--
+ * @Description: 
+ * @Version: 2.0
+ * @Autor: lgc
+ * @Date: 2022-05-19 15:04:26
+ * @LastEditors: lgc
+ * @LastEditTime: 2022-05-20 14:46:39
+-->
 <template>
   <ar-button @click="handleClick"/>
 </template>
@@ -39,7 +47,7 @@ export default {
   &:hover{
     box-shadow none
     &:before{
-      content: "Switch Microphone";
+      content: "开关麦克风";
      }
    }
 }

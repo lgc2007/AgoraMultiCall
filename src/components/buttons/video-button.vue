@@ -27,7 +27,7 @@ export default {
   }
   &:hover{
     &:before{
-      content: "Switch Camera";
+      content: "开关摄像头";
      }
    }
 }

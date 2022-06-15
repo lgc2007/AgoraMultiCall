@@ -22,4 +22,10 @@ p
   -ms-user-select:none;
   user-select:none;
 }
+
+</style>
+<style lang="scss" scoped>
+#app {
+  height: 100%
+}
 </style>
