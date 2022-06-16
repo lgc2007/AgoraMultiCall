@@ -7,10 +7,12 @@
         :appid="appid"
         :token="token"
         :uid="userId"
+        :client-config="{ mode: 'live', role: 'host' }"
         :auto-start="true"
         :error-handler="handleError"
         enable-dual-stream
         @rtc-loaded="handleUserLoaded"
+        @crypt-error="cryptError"
         @user-joined="handleUserJoin"
         @user-published="handleUserPublished"
         @user-left="handleUserLeft"
@@ -262,11 +264,24 @@ export default {
     userId() {
       return this.$store.state.user.userId;
     },
+    meetingPage() {
+      // 会议信息
+      return this.$store.state.user.meetingPage;
+    },
+    channelName() {
+      return this.$store.state.user.channelName;
+    },
+    rtcToken() {
+      return this.$store.state.user.rtcToken;
+    },
+    encryptSalt() {
+      return this.$store.state.user.encryptSalt;
+    },
+    encryptSecretKey() {
+      return this.$store.state.user.encryptSecretKey;
+    },
     secretKey() {
       return this.$store.state.user.secretKey;
-    },
-    salt() {
-      return this.$store.state.user.salt;
     },
     refuseList() {
       // 拒绝其音频媒体流的远端用户的UID列表
@@ -395,13 +410,19 @@ export default {
     handleUserLoaded(aaa) {
       // SDK加载完成，此时可以读取 AgoraRTC 对象, 在此之前调用 getAgoraRTC 是拿不到 AgoraRTC 对象的。
       // this.$refs.ar.getClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
-      this.$refs.ar.AgoraRTC.createClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
+      // this.$refs.ar.AgoraRTC.createClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
       console.log('SDK加载完成:', aaa);
+    },
+    cryptError() {
+      console.log('触发了crypt-error回调');
     },
     handleClientCreated() {
       // client创建完成的事件。此时已完成client的创建，client上事件的监听，以及直播状态下角色的设置。
       console.log('refffffffffffffff:', this.$refs.ar.getClient());
-      this.$refs.ar.getClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
+      console.log('encryptSecretKey:', this.encryptSecretKey);
+      console.log('encryptSalt:', this.encryptSalt);
+      console.log(this.encryptSalt);
+      this.$refs.ar.getClient().setEncryptionConfig('aes-128-gcm2', this.secretKey, this.encryptSalt);
       window._agMeet = this;
       window._client = this.$refs.ar.getClient();
       window._AgoraRTC = this.$refs.ar.getAgoraRtc();
@@ -410,7 +431,7 @@ export default {
     },
     handleMute() { // 开关麦克风
       meetingTurn({
-        'id': '770ul2o4',
+        id: this.meetingPage.id,
         'agoraType': 'AUDIO', // 音频AUDIO，视频VIDEO
         'state': this.mute ? 1 : 0		// 0关闭，1开启
       }).then(({ obj }) => {
@@ -442,7 +463,7 @@ export default {
         return;
       }
       exit({
-        id: '770ul2o4',
+        id: this.meetingPage.id,
       }).then(({ obj }) => {
         if (obj) {
           this.$refs.ar.leave().then(() => {
@@ -457,7 +478,7 @@ export default {
     },
     handleCamera(val) { // 开关摄像头
       meetingTurn({
-        'id': '770ul2o4',
+        id: this.meetingPage.id,
         'agoraType': 'VIDEO', // 音频AUDIO，视频VIDEO
         'state': this.cameraIsClosed ? 1 : 0		// 0关闭，1开启
       }).then(({ obj }) => {

@@ -606,7 +606,6 @@ export function doFlattenArr(menus) {
 export function urlArr () {
   return {
     loginoutUrl: window._loginoutUrl || '/login',
-    portalUrl: window._portalUrl || '/zj/page_portal/portal'
   };
 }
 /**

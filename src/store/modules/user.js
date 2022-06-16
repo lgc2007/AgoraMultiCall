@@ -21,6 +21,7 @@ const getDefaultState = () => {
     user: {},
     menu: [],
     meetingDetail: {},
+    userDetail: {},
     openlogin: false,
     operations: {},
     name: '',
@@ -109,13 +110,13 @@ const actions = {
       page({
         pageNum: '1',
         pageSize: '10',
-        meetingName: '测试会议0610'
+        // meetingName: '测试会议0610'
       })
         .then(({ obj: { records }}) => {
           commit('setState', {
-            meetingPage: (records && records[0]) || []
+            meetingPage: (records && records[1]) || []
           });
-          resolve(records[0]);
+          resolve(records[1]);
         })
         .catch(error => {
           reject(error);
@@ -126,9 +127,14 @@ const actions = {
     return new Promise((resolve, reject) => {
       meetingDetail(state.meetingPage.id)
         .then(({ obj }) => {
-          commit('setState', {
-            meetingDetail: obj
-          });
+          if (obj) {
+            const userDetail = obj.meetingUsers.filter(item => item.agoraId === state.agoraId);
+            commit('setState', {
+              meetingDetail: obj,
+              userDetail,
+            });
+          }
+
           resolve();
         })
         .catch(error => {

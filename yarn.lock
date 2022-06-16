@@ -1985,14 +1985,14 @@ address@^1.1.2:
   resolved "https://registry.npmmirror.com/address/-/address-1.2.0.tgz#d352a62c92fee90f89a693eccd2a8b2139ab02d9"
   integrity sha512-tNEZYz5G/zYunxFm7sfhAxkXEuLj3K6BKwv6ZURlsF6yiUQ65z0Q2wZW9L5cPUl9ocofGvXOdFYbFHp0+6MOig==
 
-agora-rtc-sdk-ng@^4.4.0:
-  version "4.11.1"
-  resolved "https://registry.npmmirror.com/agora-rtc-sdk-ng/-/agora-rtc-sdk-ng-4.11.1.tgz#d63accd6a678ea4e17748f431919bc5aa9b1f7f1"
-  integrity sha512-BUr0DK4Uq13lzsULVldp15sJYDTeDfDao9T6thsSQkT2jSTTQvuC01vz2H8/eA32ZGhsAeTaL2UcsULDbCkplg==
+agora-rtc-sdk-ng@^4.12.0:
+  version "4.12.0"
+  resolved "https://registry.npmmirror.com/agora-rtc-sdk-ng/-/agora-rtc-sdk-ng-4.12.0.tgz#98dd31771c875709c5bb63770edf2f5bf82378c2"
+  integrity sha512-lKL6PTw6PPzIX52Eq7Awq+oQdZR5y2DnA9RIpD+Gv+Srr5JsrCbh7eA+9KrOnncEPGOlraz/Phx3GZuGyFAMPA==
   dependencies:
     agora-rte-extension "^1.0.22"
 
-agora-rtc-vue@^0.2.45:
+agora-rtc-vue@^0.2.53:
   version "0.2.53"
   resolved "https://registry.npmmirror.com/agora-rtc-vue/-/agora-rtc-vue-0.2.53.tgz#6345e7d1996289feb0f9672725a9657fcd3443a3"
   integrity sha512-PZQD22lBbBF5U0kS3q8/XuEb1gBECqwaaiGlg0uymebf0UxJwbBPhngQwEuVnJflRq1CY1Ei2gmmdvcNgN/EPQ==

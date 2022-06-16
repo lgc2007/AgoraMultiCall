@@ -4,12 +4,9 @@
  * @Autor: lgc
  * @Date: 2022-06-01 10:02:10
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-15 08:57:36
+ * @LastEditTime: 2022-06-16 17:19:50
  */
-import { mds } from './mds';
 import request from '@/utils/request';
-import requestCenter from '@/utils/request-center';
-import requestProxy from '@/utils/request-proxy';
 export function login(data) {
   return request({
     url: '/api2-uat/admin/api/token/v2/login',
@@ -70,6 +67,22 @@ export function meetingTurn(data) {
 export function exit(data) {
   return request({
     url: `/api8-uat/supervision/meeting/exit`,
+    method: 'post',
+    data,
+  });
+}
+// 进入发言席
+export function speechSeatAttend(data) {
+  return request({
+    url: `/api8-uat/supervision/meeting/speechSeat/attend`,
+    method: 'post',
+    data,
+  });
+}
+// 退出发言席
+export function speechSeatExit(data) {
+  return request({
+    url: `/api8-uat/supervision/meeting/speechSeat/exit`,
     method: 'post',
     data,
   });

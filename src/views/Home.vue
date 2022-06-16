@@ -2,7 +2,7 @@
   <div class="home">
     <meet
       v-if="isJoinMeeting"
-      :channel="channel"
+      :channel="channelName"
       :appid="appid"
       :token="rtcToken"
       :pre-mute="config.mute"
@@ -31,18 +31,11 @@ export default {
   },
   data() {
     return {
-      // 5fe43576b74a48babc7fec3fc2dd9bf9 7e22d34cd0214cc9b80ff3e31f283202   fb1e2ad91a584f3785438f22589de1d4
       isJoinMeeting: false,
       config: null,
       appid: '743decdce87c47be9758498fb9829774' || localStorage.getItem('appid') || '',
       channel: 'm770ul2o4' || sessionStorage.getItem('channel') || '',
       token: '006743decdce87c47be9758498fb9829774IABNcTbdqOHFWohUXwgm0pu3ojBeR+Qiw+7htYj3rgaZZG8hbwmXiKC3IgAh7MxZagSkYgQAAQBqBKRiAgBqBKRiAwBqBKRiBABqBKRi',
-      //  ||
-      //   localStorage.getItem("token") === "null"
-      //     ? null
-      //     : localStorage.getItem("token") === null
-      //     ? undefined
-      //     : localStorage.getItem("token") || ''
     };
   },
   computed: {
@@ -51,6 +44,9 @@ export default {
     },
     rtmToken() {
       return this.$store.state.user.rtmToken;
+    },
+    channelName() {
+      return this.$store.state.user.channelName;
     },
   },
   watch: {

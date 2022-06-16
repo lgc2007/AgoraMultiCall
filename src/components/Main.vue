@@ -115,6 +115,15 @@ export default {
         window.cancelAnimationFrame(id);
       });
     },
+    base64ToArrayBuffer(base64) {
+      var binary_string = window.atob(base64);
+      var len = binary_string.length;
+      var bytes = new Uint8Array(len);
+      for (var i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+      }
+      return bytes.buffer;
+    },
     base64ToUint8Array(base64Str) {
       // 声明一个工具函数，用于将 Base64 转换成 Uint8Array。
       const raw = window.atob(base64Str);
@@ -135,7 +144,8 @@ export default {
     },
     handleJoin() {
       const client = AgoraRTC.createClient();
-      console.log('ssssss:', client);
+      const client1 = AgoraRTC.createClient();
+      console.log('ssssss:', this.$refs.mainref.AgoraRTC.createClient(), this.$refs.mainref.AgoraRTC.createClient());
       meetingAttend({
         id: this.$store.state.user.meetingPage.id,
       }).then(({ obj: {
@@ -143,11 +153,12 @@ export default {
       }}) => {
         console.log(channelName, meetingUsers, rtcToken, salt, secretKey);
         this.$store.commit('user/setState', {
-          channelName, meetingUsers, rtcToken, salt, secretKey
+          channelName, meetingUsers, rtcToken, salt, secretKey, encryptSalt: this.base64ToUint8Array(salt), encryptSecretKey: this.hex2ascii(secretKey)
         });
-        console.log('ccc:', this.hex2ascii(secretKey), 'bbb:', this.base64ToUint8Array(salt));
-        client.setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
-        this.$refs.mainref.AgoraRTC.createClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
+        // console.log('ccc:', this.hex2ascii(secretKey), 'bbb:', this.base64ToUint8Array(salt));
+        // client.setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
+        // this.$refs.mainref.AgoraRTC.createClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
+        // this.$refs.mainref.getClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
         this.$emit('join-meeting', {
           channel: channelName || this.channel,
           mute: this.mute,
