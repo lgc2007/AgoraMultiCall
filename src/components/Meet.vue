@@ -125,7 +125,20 @@
         </div>
       </div>
     </div>
-    <div class="notify">
+    <div class="top-operate">
+      <div class="top-operate-left" @click="toggleCamera">
+        <!-- <van-icon name="exchange" /> -->
+        <van-button v-for="(item,index) in dataList" :key="index" type="primary" @click="videoClick(item)">{{ item.count }}</van-button>
+        <van-button icon="exchange" type="primary">切换</van-button>
+      </div>
+      <div class="top-operate-right" @click="handleCall">
+        <van-button type="primary">加入</van-button>
+      </div>
+      <div class="top-operate-right" @click="handleLeave">
+        <van-button type="primary">离开</van-button>
+      </div>
+    </div>
+    <!-- <div class="notify">
       <div class="remote-user" @click="handleExpandUserList">
         用户: {{ users.length }}
       </div>
@@ -145,7 +158,7 @@
           <img v-show="cameraIsClosed" src="../assets/yonghu.svg" alt="" />
         </div>
       </div>
-    </div>
+    </div> -->
     <div v-show="showExpandUserList" class="user-list">
       <p @click="handleCustom">参加会议的所有用户 :</p>
       <ul>
@@ -180,7 +193,7 @@
           <svg-icon :icon-class="mute ? 'microphone_mute' : 'microphone'" class-name="microphone" />
         </div>
         <div class="tabbar-item-text">
-          <span>麦克风</span>
+          <span>{{ userType ? '我要发言' : '语音' }}</span>
         </div>
       </div>
       <div class="tabbar-item" @click="handleCamera">
@@ -188,7 +201,7 @@
           <svg-icon :icon-class="cameraIsClosed ? 'video_mute' : 'video'" class-name="video" />
         </div>
         <div class="tabbar-item-text">
-          <span>摄像头</span>
+          <span>视频</span>
         </div>
       </div>
       <div class="tabbar-item" @click="handleExpandUserList">
@@ -231,8 +244,8 @@ import VideoButton from './buttons/video-button';
 import VoiceDot from './voice-dot/main';
 import AvatarAudio from './avatar-audio/main';
 import PinButton from './pin-button/main';
-import { meetingTurn, exit } from '@/api/url';
-import { Tabbar, TabbarItem, Icon } from 'vant';
+import { meetingTurn, exit, speechSeatAttend, speechSeatExit } from '@/api/url';
+import { Tabbar, TabbarItem, Icon, Button, Dialog, } from 'vant';
 
 export default {
   name: 'Meet',
@@ -247,6 +260,8 @@ export default {
     [Tabbar.name]: Tabbar,
     [TabbarItem.name]: TabbarItem,
     [Icon.name]: Icon,
+    [Button.name]: Button,
+    [Dialog.name]: Dialog,
   },
   props: {
     channel: {
@@ -295,11 +310,17 @@ export default {
         active: 'https://img01.yzcdn.cn/vant/user-active.png',
         inactive: 'https://img01.yzcdn.cn/vant/user-inactive.png',
       },
+      currentStream: undefined,
+      dataList: [],
+      toggle: true,
     };
   },
   computed: {
     userId() {
       return this.$store.state.user.userId;
+    },
+    userType() {
+      return this.$store.state.user.userDetail.userType;
     },
     meetingPage() {
       // 会议信息
@@ -461,6 +482,37 @@ export default {
       // client.setStreamFallbackOption()
     },
     handleMute() { // 开关麦克风
+      if (this.userType) {
+        if (this.mute) {
+          Dialog.confirm({
+            title: '温馨提醒',
+            message: '您确定要发言吗？',
+          })
+            .then(() => {
+            // on confirm
+              speechSeatAttend({
+                id: this.meetingPage.id,
+              }).then(({ obj }) => {
+                this.mute = !this.mute;
+              });
+            })
+            .catch(() => {
+            // on cancel
+            });
+        } else {
+          speechSeatExit({
+            id: this.meetingPage.id,
+          }).then(({ obj }) => {
+            this.mute = !this.mute;
+          });
+        }
+      } else {
+        this.audioSwitch();
+      }
+    },
+    audioSwitch() {
+      this.mute = !this.mute;
+      this.$toast(`麦克风 ${this.mute ? '关' : '开'}`);
       meetingTurn({
         id: this.meetingPage.id,
         'agoraType': 'AUDIO', // 音频AUDIO，视频VIDEO
@@ -468,8 +520,6 @@ export default {
       }).then(({ obj }) => {
         console.log(obj);
       });
-      this.mute = !this.mute;
-      this.$toast(`麦克风 ${this.mute ? '关' : '开'}`);
     },
     playLocalVideoOnTopBanner() {
       const videoTrack = this.$refs.videoSender
@@ -683,7 +733,91 @@ export default {
       } else {
         this.$toast.error('流回退类型错误');
       }
-    }
+    },
+    getdatalist() {
+      const _this = this;
+      console.log('调用成功');
+      navigator.mediaDevices.enumerateDevices().then(res => {
+        this.gotDevices(res);
+        _this.dataList.forEach(res => {
+          if (res.count == '1') {
+            _this.videoClick(res);
+          }
+        });
+      });
+    },
+    toggleCamera() {
+      this.getdatalist();
+      const _this = this;
+      this.toggle = !this.toggle;
+      if (this.dataList) {
+        if (this.toggle) {
+          console.log('前置');
+          // 前置
+          _this.dataList.forEach(res => {
+            if (res.count == '1') {
+              _this.videoClick(res);
+            }
+          });
+        } else {
+          console.log('后置');
+          console.log(_this.dataList);
+          _this.videoClick(_this.dataList[_this.dataList.length - 1]);
+          // 后置
+        }
+      }
+    },
+    stopMediaTracks(stream) {
+      stream.getTracks().forEach(track => {
+        track.stop();
+      });
+    },
+    videoClick(item) {
+      const _this = this;
+
+      if (item) {
+        if (typeof _this.currentStream !== 'undefined') {
+          _this.stopMediaTracks(_this.currentStream);
+        }
+        const videoConstraints = {};
+        console.log('设备');
+        console.log(JSON.stringify(item));
+        console.log(item.deviceId);
+        videoConstraints.deviceId = { exact: item.deviceId };
+        const constraints = {
+          video: videoConstraints,
+          audio: false
+        };
+        console.log(constraints);
+        navigator.mediaDevices
+          .getUserMedia(constraints)
+          .then(stream => {
+            _this.currentStream = stream;
+            window.src = stream;
+            document.getElementsByTagName('video')[0].srcObject = window.src;
+            return navigator.mediaDevices.enumerateDevices();
+          })
+          .then(res => {
+            _this.gotDevices(res);
+          })
+          .catch(error => {
+            console.log(error + '出错');
+          });
+      }
+    },
+    gotDevices(mediaDevices) {
+      const _this = this;
+      // const controls = document.getElementById('controls');
+      // const video = document.getElementById('videoDom');
+      this.dataList = [];
+      let count = 1;
+      mediaDevices.forEach(mediaDevice => {
+        if (mediaDevice.kind === 'videoinput') {
+          mediaDevice.count = `${count++}`;
+          _this.dataList.push(mediaDevice);
+        }
+      });
+    },
   }
 };
 </script>
@@ -695,167 +829,23 @@ video.agora_video_player
 
 <style scoped lang="stylus">
 @import "../styles/meet/index.styl"
-.player{
-  position: absolute;
-  top 0
-  left 0
-  display flex
-  flex-wrap wrap
-  justify-content center
-  align-items stretch
-  width 100vw
-  height calc(100vh - 90px)
-  &>.user-vision{
-    background-color: #333;
-    flex 0 0 33.33333%
-  }
-  &>.user-vision:first-child:nth-last-child(1){
-    flex 1 0 100%
-  }
-  &>.user-vision:first-child:nth-last-child(2),
-  &>.user-vision:first-child:nth-last-child(2) ~ div,
-  &>.user-vision:first-child:nth-last-child(3),
-  &>.user-vision:first-child:nth-last-child(3) ~ div,
-  &>.user-vision:first-child:nth-last-child(4),
-  &>.user-vision:first-child:nth-last-child(4) ~ div
-  {
-    flex 0 0 50%
-  }
-  &>div:nth-child(4):nth-last-child(2),
-  &>div:nth-child(4):nth-last-child(2) ~ div{
-    flex 0 0 50%
-  }
-
-  &.screen-share-player{
-    flex-direction column-reverse
-    justify-content flex-end
-    justify-items flex-end
-    align-items stretch
-    .screen-share-vision{
-      order: -1;
-      flex 0 0 100% !important
-      width 70%
-      &.screen-share-vision-pined{
-        width: 100%
-      }
-    }
-    .user-vision:first-child:nth-last-child(2):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(2) ~ div:not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(3):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(3) ~ div:not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(4):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(4) ~ div:not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(5):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(5) ~ div:not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(6):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(6) ~ div:not(.screen-share-vision)
-    {
-      width 30%
-      flex 0 0 50%
-    }
-    .user-vision:first-child:nth-last-child(4):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(4) ~ div:not(.screen-share-vision){
-      flex 0 0 33.3333333%
-    }
-    .user-vision:first-child:nth-last-child(5):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(5) ~ div:not(.screen-share-vision){
-      flex 0 0 25%
-    }
-    .user-vision:first-child:nth-last-child(6):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(6) ~ div:not(.screen-share-vision){
-      flex 0 0 20%
-    }
-    .user-vision:first-child:nth-last-child(7):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(7) ~ div:not(.screen-share-vision){
-      width: 15%
-      flex 0 0 33.3333333%
-    }
-    .user-vision:first-child:nth-last-child(8):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(8) ~ div:not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(9):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(9) ~ div:not(.screen-share-vision)
-    {
-      width: 15%
-      flex 0 0 25%
-    }
-    .user-vision:first-child:nth-last-child(10):not(.screen-share-vision),
-    .user-vision:first-child:nth-last-child(10) ~ div:not(.screen-share-vision)
-    {
-      width: 15%
-      flex 0 0 20%
-    }
-  }
-
-  & .user-vision {
-    position: relative;
-    .player-vision {
-      width: 100%
-      height: 100%
-    }
-    & .ban{
-      z-index 2
-      display flex
-      justify-content center
-      align-items center
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform translateX(-50%);
-      flex-direction row
-      cursor pointer
-      border-radius 8px
-      color $main_color
-      background-color: rgba(238,238,238,0.6);
-      padding 2px 0 2px 10px
-      &:hover{
-        background-color: #eee;
-      }
-      p{
-        position: relative;
-        margin 4px 0
-        padding 4px 10px 4px 28px
-        word-break: keep-all
-        white-space: nowrap
-        &:before{
-          position: absolute;
-          left 6px
-          top 50%
-          transform translateY(-50%)
-          display block
-          content ""
-          width 16px
-          height 16px
-          background center / contain  no-repeat url("~@/assets/yonghu.svg")
-        }
-      }
-    }
-    & .central{
-      position: absolute
-      top: 50%
-      left: 50%
-      display flex
-      align-items center
-      justify-content space-around;
-      transform translate(-50%,-50%);
-      padding 8px 18px
-      background-color: rgba(210,210,210,0.8);
-      border-radius 10px
-      opacity: 0
-      transition opacity 0.3s linear
-    }
-    &:hover{
-      & .central{
-        opacity 1
-        z-index 2
-      }
-    }
-  }
-}
 
 </style>
 <style lang="scss" scoped>
+@import "@/styles/meet/player.scss";
 .microphone {
   font-size: 30px;
+}
+.top-operate {
+  display: flex;
+  justify-items: center;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  width: 100%;
+  height: 50px;
+  top: 0;
+  background-color: #fff;
 }
 .notify{
   display: flex;
@@ -867,7 +857,7 @@ video.agora_video_player
   right: 0;
   background-color: #fff;
   border-radius:  0 0 0 10px;
-  width: 300px;
+  width: 100%;
   height: 50px;
   z-index: 100;
 }

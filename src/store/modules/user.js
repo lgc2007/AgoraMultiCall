@@ -128,7 +128,7 @@ const actions = {
       meetingDetail(state.meetingPage.id)
         .then(({ obj }) => {
           if (obj) {
-            const userDetail = obj.meetingUsers.filter(item => item.agoraId === state.agoraId);
+            const userDetail = obj.meetingUsers.filter(item => item.agoraId === state.agoraId)[0];
             commit('setState', {
               meetingDetail: obj,
               userDetail,
