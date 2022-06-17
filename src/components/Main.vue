@@ -11,7 +11,7 @@
       :auto-start="false"
       :error-handler="
         error => {
-          this.$message.error(error.message || error);
+          this.$toast.error(error.message || error);
         }
       "
     >

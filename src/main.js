@@ -4,7 +4,7 @@
  * @Autor: lgc
  * @Date: 2022-05-19 15:04:26
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-17 15:54:47
+ * @LastEditTime: 2022-06-17 15:55:44
  */
 import Vue from 'vue';
 import App from './App.vue';

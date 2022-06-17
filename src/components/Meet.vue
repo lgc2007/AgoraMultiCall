@@ -271,7 +271,7 @@ export default {
     return {
       mute: false, // 是否开启静音 (即本地音频收集和播放(如果开启了monitor),并停止向远端发送音频流)
       handleError: error => {
-        this.$message.error(error.message || error);
+        this.$toast.error(error.message || error);
       },
       uid: null,
       cameraIsClosed: false,
@@ -424,7 +424,7 @@ export default {
       // 加入频道成功的事件
       this.inMeeting = true;
       this.uid = uid;
-      this.$message.success('成功加入会议');
+      this.$toast.success('成功加入会议');
     },
     base64ToUint8Array(base64Str) {
       // 声明一个工具函数，用于将 Base64 转换成 Uint8Array。
@@ -469,7 +469,7 @@ export default {
         console.log(obj);
       });
       this.mute = !this.mute;
-      this.$message(`麦克风 ${this.mute ? '关' : '开'}`);
+      this.$toast(`麦克风 ${this.mute ? '关' : '开'}`);
     },
     playLocalVideoOnTopBanner() {
       const videoTrack = this.$refs.videoSender
@@ -487,7 +487,7 @@ export default {
               this.inMeeting = false;
               this.remoteUsers = [];
               this.uid = null;
-              this.$message.success('成功离开会议');
+              this.$toast.success('成功离开会议');
               this.$emit('leave-meeting');
             });
           }
@@ -495,25 +495,25 @@ export default {
       } else {
         this.$refs.ar.start().then(({ result, message }) => {
           if (!result) {
-            this.$message.error('加入频道错误', message);
+            this.$toast.error('加入频道错误', message);
           }
         });
       }
     },
     handleCall() {
       if (this.inMeeting) {
-        this.$message.error('你已经在会议了');
+        this.$toast.error('你已经在会议了');
         return;
       }
       this.$refs.ar.start().then(({ result, message }) => {
         if (!result) {
-          this.$message.error('加入频道错误', message);
+          this.$toast.error('加入频道错误', message);
         }
       });
     },
     handleLeave() {
       if (!this.inMeeting) {
-        this.$message.error('您没有参加任何会议');
+        this.$toast.error('您没有参加任何会议');
         return;
       }
       exit({
@@ -524,7 +524,7 @@ export default {
             this.inMeeting = false;
             this.remoteUsers = [];
             this.uid = null;
-            this.$message.success('成功离开会议');
+            this.$toast.success('成功离开会议');
             this.$emit('leave-meeting');
           });
         }
@@ -539,11 +539,11 @@ export default {
         console.log(obj);
       });
       this.cameraIsClosed = !this.cameraIsClosed;
-      this.$message(`相机 ${this.cameraIsClosed ? '关' : '开'}`);
+      this.$toast(`相机 ${this.cameraIsClosed ? '关' : '开'}`);
     },
     handleUserJoin(user) {
       // 远端用户或主播加入频道的事件
-      this.$message(`${user.uid} 加入会议`);
+      this.$toast(`${user.uid} 加入会议`);
 
       // 弱网路回退
       this.$refs.ar.getClient().setStreamFallbackOption(user.uid, 2);
@@ -566,7 +566,7 @@ export default {
     },
     handleUserLeft(user, reason) {
       // 远端用户离线的事件
-      this.$message(`${user.uid} 离开了会议 ${reason}`);
+      this.$toast(`${user.uid} 离开了会议 ${reason}`);
       this.remoteUsers = this.$refs.ar
         .getRemoteUsers()
         .filter(
@@ -665,10 +665,10 @@ export default {
     handleShareScreen() {
       if (!this.youAreShareScreening) {
         if (this.otherIsShareScreening) {
-          this.$message.warning(`other is sharing, and you will replace him.`);
+          this.$toast.warning(`other is sharing, and you will replace him.`);
         }
       } else {
-        this.$message(`您将要退出共享`);
+        this.$toast(`您将要退出共享`);
       }
       this.openScreenSharing = !this.openScreenSharing;
     },
@@ -681,7 +681,7 @@ export default {
       } else if (type === 'fallback') {
         this.streamFallbackList = [...new Set([...list, uid])];
       } else {
-        this.$message.error('流回退类型错误');
+        this.$toast.error('流回退类型错误');
       }
     }
   }
@@ -695,12 +695,183 @@ video.agora_video_player
 
 <style scoped lang="stylus">
 @import "../styles/meet/index.styl"
+.player{
+  position: absolute;
+  top 0
+  left 0
+  display flex
+  flex-wrap wrap
+  justify-content center
+  align-items stretch
+  width 100vw
+  height calc(100vh - 90px)
+  &>.user-vision{
+    background-color: #333;
+    flex 0 0 33.33333%
+  }
+  &>.user-vision:first-child:nth-last-child(1){
+    flex 1 0 100%
+  }
+  &>.user-vision:first-child:nth-last-child(2),
+  &>.user-vision:first-child:nth-last-child(2) ~ div,
+  &>.user-vision:first-child:nth-last-child(3),
+  &>.user-vision:first-child:nth-last-child(3) ~ div,
+  &>.user-vision:first-child:nth-last-child(4),
+  &>.user-vision:first-child:nth-last-child(4) ~ div
+  {
+    flex 0 0 50%
+  }
+  &>div:nth-child(4):nth-last-child(2),
+  &>div:nth-child(4):nth-last-child(2) ~ div{
+    flex 0 0 50%
+  }
+
+  &.screen-share-player{
+    flex-direction column-reverse
+    justify-content flex-end
+    justify-items flex-end
+    align-items stretch
+    .screen-share-vision{
+      order: -1;
+      flex 0 0 100% !important
+      width 70%
+      &.screen-share-vision-pined{
+        width: 100%
+      }
+    }
+    .user-vision:first-child:nth-last-child(2):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(2) ~ div:not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(3):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(3) ~ div:not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(4):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(4) ~ div:not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(5):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(5) ~ div:not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(6):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(6) ~ div:not(.screen-share-vision)
+    {
+      width 30%
+      flex 0 0 50%
+    }
+    .user-vision:first-child:nth-last-child(4):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(4) ~ div:not(.screen-share-vision){
+      flex 0 0 33.3333333%
+    }
+    .user-vision:first-child:nth-last-child(5):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(5) ~ div:not(.screen-share-vision){
+      flex 0 0 25%
+    }
+    .user-vision:first-child:nth-last-child(6):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(6) ~ div:not(.screen-share-vision){
+      flex 0 0 20%
+    }
+    .user-vision:first-child:nth-last-child(7):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(7) ~ div:not(.screen-share-vision){
+      width: 15%
+      flex 0 0 33.3333333%
+    }
+    .user-vision:first-child:nth-last-child(8):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(8) ~ div:not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(9):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(9) ~ div:not(.screen-share-vision)
+    {
+      width: 15%
+      flex 0 0 25%
+    }
+    .user-vision:first-child:nth-last-child(10):not(.screen-share-vision),
+    .user-vision:first-child:nth-last-child(10) ~ div:not(.screen-share-vision)
+    {
+      width: 15%
+      flex 0 0 20%
+    }
+  }
+
+  & .user-vision {
+    position: relative;
+    .player-vision {
+      width: 100%
+      height: 100%
+    }
+    & .ban{
+      z-index 2
+      display flex
+      justify-content center
+      align-items center
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform translateX(-50%);
+      flex-direction row
+      cursor pointer
+      border-radius 8px
+      color $main_color
+      background-color: rgba(238,238,238,0.6);
+      padding 2px 0 2px 10px
+      &:hover{
+        background-color: #eee;
+      }
+      p{
+        position: relative;
+        margin 4px 0
+        padding 4px 10px 4px 28px
+        word-break: keep-all
+        white-space: nowrap
+        &:before{
+          position: absolute;
+          left 6px
+          top 50%
+          transform translateY(-50%)
+          display block
+          content ""
+          width 16px
+          height 16px
+          background center / contain  no-repeat url("~@/assets/yonghu.svg")
+        }
+      }
+    }
+    & .central{
+      position: absolute
+      top: 50%
+      left: 50%
+      display flex
+      align-items center
+      justify-content space-around;
+      transform translate(-50%,-50%);
+      padding 8px 18px
+      background-color: rgba(210,210,210,0.8);
+      border-radius 10px
+      opacity: 0
+      transition opacity 0.3s linear
+    }
+    &:hover{
+      & .central{
+        opacity 1
+        z-index 2
+      }
+    }
+  }
+}
 
 </style>
 <style lang="scss" scoped>
 .microphone {
   font-size: 30px;
 }
+.notify{
+  display: flex;
+  justify-items: center;
+  justify-content: space-around;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: #fff;
+  border-radius:  0 0 0 10px;
+  width: 300px;
+  height: 50px;
+  z-index: 100;
+}
+
 .tabbar {
     position: fixed;
     bottom: 0;

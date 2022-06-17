@@ -4,7 +4,7 @@
  * @Autor: lgc
  * @Date: 2022-05-19 15:04:26
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-17 14:59:56
+ * @LastEditTime: 2022-06-17 15:57:58
  */
 'use strict';
 const path = require('path');
@@ -84,7 +84,7 @@ module.exports = {
         plugins: [
           autoprefixer(),
           pxtoviewport({
-            viewportWidth: 375
+            viewportWidth: 750
           })
         ]
       }
