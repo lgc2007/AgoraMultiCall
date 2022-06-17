@@ -31,52 +31,7 @@ $main_color=#099dfd
       }
     }
   }
-  .camera-area{
-    position: absolute;
-    top: 28vh
-    left: 8vw
-    width: 50vw
-    height: 50vh
-    border-radius 1vw
-    overflow hidden
-    background-color: #000;
-    &:after{
-      position: absolute;
-      left: 0;
-      top: 50%;
-      right: 0;
-      transform translateY(-50%)
-      display block
-      content "video NOT captured"
-      color #fff
-      font-size 1.5em
-      background-color: #000;
-      text-align center
-      z-index -1
-    }
-    &.camera-off{
-      &:after{
-        z-index 1
-      }
-    }
-    .voice-dot-local{
-      position: absolute;
-      bottom: 16px;
-      left: 20px;
-    }
-    .mp-btn-local,.video-btn-local{
-      position: absolute;
-      bottom: 0px
-      left: 50%
-      z-index 1
-    }
-    .mp-btn-local{
-      transform translateX(-140%)
-    }
-    .video-btn-local{
-      transform translateX(0%)
-    }
-  }
+  
   .operation{
     position: absolute;
     right: 10vw
@@ -97,16 +52,7 @@ $main_color=#099dfd
         margin 10px 0 30px 0
       }
     }
-    .join-button{
-      width: 7em
-      line-height 3em
-      border-radius 3em
-      text-align center
-      background-color: $main_color;
-      color #fff
-      font-size 1em
-      cursor pointer
-    }
+    
   }
 
   .footer{

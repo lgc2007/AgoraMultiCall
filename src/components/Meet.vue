@@ -174,14 +174,42 @@
         </li>
       </ul>
     </div>
-    <div class="banner">
+    <div class="tabbar">
+      <div class="tabbar-item" @click="handleMute">
+        <div class="tabbar-item-icon">
+          <svg-icon :icon-class="mute ? 'microphone_mute' : 'microphone'" class-name="microphone" />
+        </div>
+        <div class="tabbar-item-text">
+          <span>麦克风</span>
+        </div>
+      </div>
+      <div class="tabbar-item" @click="handleCamera">
+        <div class="tabbar-item-icon">
+          <svg-icon :icon-class="cameraIsClosed ? 'video_mute' : 'video'" class-name="video" />
+        </div>
+        <div class="tabbar-item-text">
+          <span>摄像头</span>
+        </div>
+      </div>
+      <div class="tabbar-item" @click="handleExpandUserList">
+        <div class="tabbar-item-icon">
+          <van-icon name="friends-o" />
+        </div>
+        <div class="tabbar-item-text">
+          <span>用户</span>
+        </div>
+      </div>
+    </div>
+    <!-- <div class="banner">
       <div class="test-button" @click="handleOpenNewPage">
         （测试）打开新页面
       </div>
+
       <mp-button :class="microphoneClass" @click="handleMute" />
       <on-call-button v-if="!inMeeting" @click="handleCall" />
       <close-button v-if="inMeeting" @click="handleLeave" />
       <video-button :class="cameraClass" @click="handleCamera" />
+
       <div class="share-screen-button" @click="handleShareScreen">
         {{
           youAreShareScreening
@@ -191,7 +219,7 @@
               : "共享屏幕"
         }}
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -204,6 +232,7 @@ import VoiceDot from './voice-dot/main';
 import AvatarAudio from './avatar-audio/main';
 import PinButton from './pin-button/main';
 import { meetingTurn, exit } from '@/api/url';
+import { Tabbar, TabbarItem, Icon } from 'vant';
 
 export default {
   name: 'Meet',
@@ -214,7 +243,10 @@ export default {
     VideoButton,
     VoiceDot,
     AvatarAudio,
-    PinButton
+    PinButton,
+    [Tabbar.name]: Tabbar,
+    [TabbarItem.name]: TabbarItem,
+    [Icon.name]: Icon,
   },
   props: {
     channel: {
@@ -257,7 +289,12 @@ export default {
       openScreenSharing: false,
       youAreShareScreening: false,
       shareScreenUID: 630796919,
-      streamFallbackList: []
+      streamFallbackList: [],
+      active: 'audio',
+      icon: {
+        active: 'https://img01.yzcdn.cn/vant/user-active.png',
+        inactive: 'https://img01.yzcdn.cn/vant/user-inactive.png',
+      },
     };
   },
   computed: {
@@ -407,21 +444,15 @@ export default {
       for (let i = 0; i < hex.length; i += 2) { str += String.fromCharCode(parseInt(hex.substr(i, 2), 16)); }
       return str;
     },
-    handleUserLoaded(aaa) {
+    handleUserLoaded() {
       // SDK加载完成，此时可以读取 AgoraRTC 对象, 在此之前调用 getAgoraRTC 是拿不到 AgoraRTC 对象的。
-      // this.$refs.ar.getClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
-      // this.$refs.ar.AgoraRTC.createClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(this.secretKey), this.base64ToUint8Array(this.salt));
-      console.log('SDK加载完成:', aaa);
+      console.log('SDK加载完成:');
     },
     cryptError() {
       console.log('触发了crypt-error回调');
     },
     handleClientCreated() {
       // client创建完成的事件。此时已完成client的创建，client上事件的监听，以及直播状态下角色的设置。
-      console.log('refffffffffffffff:', this.$refs.ar.getClient());
-      console.log('encryptSecretKey:', this.encryptSecretKey);
-      console.log('encryptSalt:', this.encryptSalt);
-      console.log(this.encryptSalt);
       this.$refs.ar.getClient().setEncryptionConfig('aes-128-gcm2', this.secretKey, this.encryptSalt);
       window._agMeet = this;
       window._client = this.$refs.ar.getClient();
@@ -438,13 +469,36 @@ export default {
         console.log(obj);
       });
       this.mute = !this.mute;
-      this.$message(`Microphone Turned ${this.mute ? 'OFF' : 'ON'}`);
+      this.$message(`麦克风 ${this.mute ? '关' : '开'}`);
     },
     playLocalVideoOnTopBanner() {
       const videoTrack = this.$refs.videoSender
         .getTrack()
         .getMediaStreamTrack();
       this.$refs.localCameraPlayer.srcObject = new MediaStream([videoTrack]);
+    },
+    handleMeet() {
+      if (this.inMeeting) {
+        exit({
+          id: this.meetingPage.id,
+        }).then(({ obj }) => {
+          if (obj) {
+            this.$refs.ar.leave().then(() => {
+              this.inMeeting = false;
+              this.remoteUsers = [];
+              this.uid = null;
+              this.$message.success('成功离开会议');
+              this.$emit('leave-meeting');
+            });
+          }
+        });
+      } else {
+        this.$refs.ar.start().then(({ result, message }) => {
+          if (!result) {
+            this.$message.error('加入频道错误', message);
+          }
+        });
+      }
     },
     handleCall() {
       if (this.inMeeting) {
@@ -479,8 +533,8 @@ export default {
     handleCamera(val) { // 开关摄像头
       meetingTurn({
         id: this.meetingPage.id,
-        'agoraType': 'VIDEO', // 音频AUDIO，视频VIDEO
-        'state': this.cameraIsClosed ? 1 : 0		// 0关闭，1开启
+        agoraType: 'VIDEO', // 音频AUDIO，视频VIDEO
+        state: this.cameraIsClosed ? 1 : 0		// 0关闭，1开启
       }).then(({ obj }) => {
         console.log(obj);
       });
@@ -641,4 +695,38 @@ video.agora_video_player
 
 <style scoped lang="stylus">
 @import "../styles/meet/index.styl"
+
+</style>
+<style lang="scss" scoped>
+.microphone {
+  font-size: 30px;
+}
+.tabbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    display: flex;
+    box-sizing: content-box;
+    width: 100%;
+    height: 100px;
+    padding-bottom: env(safe-area-inset-bottom);
+    background-color: #fff;
+    .tabbar-item {
+      display: flex;
+          flex: 1;
+          justify-content: center;
+    color: #646566;
+    font-size: 3.2vw;
+    line-height: 1;
+    cursor: pointer;
+        align-items: center;
+        flex-direction: column;
+        .tabbar-item-icon {
+              position: relative;
+    margin-bottom: 1.06667vw;
+    font-size: 5.86667vw;
+        }
+    }
+}
 </style>

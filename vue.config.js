@@ -1,13 +1,15 @@
 /*
- * @Description: 
+ * @Description:
  * @Version: 2.0
  * @Autor: lgc
  * @Date: 2022-05-19 15:04:26
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-10 10:43:51
+ * @LastEditTime: 2022-06-17 14:59:56
  */
 'use strict';
 const path = require('path');
+const autoprefixer = require('autoprefixer');
+const pxtoviewport = require('postcss-px-to-viewport');
 
 function resolve(dir) {
   return path.join(__dirname, dir);
@@ -31,7 +33,7 @@ module.exports = {
       errors: true,
     },
     proxy: {
-       '/api2/admin/': {
+      '/api2/admin/': {
         target: 'http://117.160.221.236:8087/api8-uat/supervision',
         changeOrigin: true,
         ws: false,
@@ -40,7 +42,7 @@ module.exports = {
         target: 'http://117.160.221.236:8087/api8-uat/supervision',
         changeOrigin: true,
         ws: false,
-         pathRewrite: {
+        pathRewrite: {
           '^/': '',
         },
       },
@@ -57,5 +59,35 @@ module.exports = {
   },
   chainWebpack: config => {
     config.resolve.alias.set('@$', resolve('src'));
+    // config.module.rules.delete('svg'); // 重点:删除默认配置中处理svg
+
+    config.module
+      .rule('svgIcon')
+      .test(/\.svg$/)
+      .include.add(resolve('src/icon'))
+      .end()
+      .use('svg-sprite-loader')
+      // 一定要添加use
+      .loader('svg-sprite-loader')
+      .tap(options => {
+        options = { symbolId: 'icon-[name]' };
+        return options;
+      }); // 原有的svg图像处理loader添加exclude
+    config.module
+      .rule('svg')
+      .exclude.add(resolve('src/icon'))
+      .end();
   },
+  css: {
+    loaderOptions: {
+      postcss: {
+        plugins: [
+          autoprefixer(),
+          pxtoviewport({
+            viewportWidth: 375
+          })
+        ]
+      }
+    }
+  }
 };

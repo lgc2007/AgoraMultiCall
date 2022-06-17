@@ -45,15 +45,22 @@
         @click="handleVideoClick"
       ></video-button-white>
     </div>
-    <div class="operation">
-      <p class="question">你准备好加入会议了吗?</p>
-      <p class="tip">享受会议时间</p>
-      <div class="join-button" @click="handleJoin">加入会议</div>
-    </div>
+    <div class="join-button" @click="handleJoin">
+      <van-button
+        round
+        block
+        type="info"
+        native-type="submit"
+      >加入会议</van-button></div>
+    <!-- <div class="operation"> -->
+    <!-- <p class="question">你准备好加入会议了吗?</p>
+      <p class="tip">享受会议时间</p> -->
+    <!-- <div class="join-button" @click="handleJoin">加入会议</div> -->
+    <!-- </div> -->
 
-    <div class="footer">
+    <!-- <div class="footer">
       <div class="desc">demo演示</div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -63,12 +70,14 @@ import MpButtonWhite from './buttons/mp-button-white';
 import VideoButtonWhite from './buttons/video-button-white';
 import { meetingAttend } from '@/api/url';
 import AgoraRTC from 'agora-rtc-sdk-ng';
+import { Button } from 'vant';
 export default {
   name: 'Main',
   components: {
     VoiceDot,
     MpButtonWhite,
-    VideoButtonWhite
+    VideoButtonWhite,
+    [Button.name]: Button,
   },
   props: {
     channel: {
@@ -178,4 +187,74 @@ export default {
 
 <style lang="stylus" scoped>
 @import "../styles/main/index.styl"
+</style>
+<style lang="scss" scoped>
+$bgc_color:#fff;
+$main_color: #099dfd;
+.camera-area{
+    position: absolute;
+    top: 10vh;
+    left: 25vw;
+    width: 50vw;
+    height: 50vh;
+    border-radius: 1vw;
+    overflow: hidden;
+    background-color: #000;
+    &:after{
+      position: absolute;
+      left: 0;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      display: block;
+      content: "检测不到视频画面";
+      color: #fff;
+      font-size: 1.5em;
+      background-color: #000;
+      text-align: center;
+      z-index: -1;
+    }
+    &.camera-off{
+      &:after{
+        z-index: 1;
+      }
+    }
+    .voice-dot-local{
+      position: absolute;
+      bottom: 16px;
+      left: 20px;
+    }
+    .mp-btn-local,.video-btn-local{
+      position: absolute;
+      bottom: 0px;
+      left: 50%;
+      z-index: 1;
+    }
+    .mp-btn-local{
+      transform: translateX(-140%);
+    }
+    .video-btn-local{
+      transform: translateX(0%);
+    }
+  }
+  .join-button{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 999;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 16px;
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
+    background-color: #fff;
+      // width: 7em;
+      // line-height:  3em;
+      // border-radius:  3em;
+      // text-align:  center;
+      // background-color: $main_color;
+      // color:  #fff;
+      // font-size:  1em;
+      // cursor:  pointer;
+    }
 </style>

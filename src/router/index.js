@@ -4,7 +4,7 @@
  * @Autor: lgc
  * @Date: 2022-05-19 15:04:26
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-13 15:13:47
+ * @LastEditTime: 2022-06-17 09:09:41
  */
 import Vue from 'vue';
 import Store from '@/store';
@@ -16,6 +16,7 @@ import Login from '../views/login';
 Vue.use(VueRouter);
 
 const routes = [
+  { path: '*', component: Login },
   {
     path: '/',
     name: 'Home',

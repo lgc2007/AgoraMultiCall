@@ -1,25 +1,25 @@
 <!--
- * @Description: 
+ * @Description:
  * @Version: 2.0
  * @Autor: lgc
  * @Date: 2022-05-19 15:04:26
  * @LastEditors: lgc
- * @LastEditTime: 2022-05-25 10:13:52
+ * @LastEditTime: 2022-06-17 11:08:32
 -->
 <template>
-  <ar-button @click="handleClick"/>
+  <ar-button @click="handleClick" />
 </template>
 
 <script>
-import ArButton from "./ar-button.vue"
+import ArButton from './ar-button.vue';
 export default {
-  name: "CloseButton",
-  components:{
+  name: 'CloseButton',
+  components: {
     ArButton
-  } ,
-  methods:{
-    handleClick(e){
-      this.$emit("click", e)
+  },
+  methods: {
+    handleClick(e) {
+      this.$emit('click', e);
     }
   }
 };

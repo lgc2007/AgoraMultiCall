@@ -1,6 +1,36 @@
 <template>
   <div class="login">
-    <div class="info_wrap">
+    <div
+      id="index"
+      class="login"
+    >
+      <van-form validate-first @submit="login">
+        <van-field
+          v-model="information.username"
+          name="用户名"
+          label="用户名"
+          placeholder="用户名"
+          :rules="[{ required: true, message: '请填写用户名' }]"
+        />
+        <van-field
+          v-model="information.password"
+          type="password"
+          name="密码"
+          label="密码"
+          placeholder="密码"
+          :rules="[{ required: true, message: '请填写密码' }]"
+        />
+        <div style="margin: 16px;">
+          <van-button
+            round
+            block
+            type="info"
+            native-type="submit"
+          >提交</van-button>
+        </div>
+      </van-form>
+    </div>
+    <!-- <div class="info_wrap">
       <div class="info">
         <div class="login_title"><img src="~@/assets/login/login_title.png" alt=""></div>
         <el-form ref="form" :model="information" :rules="rules">
@@ -33,16 +63,23 @@
             }}</el-button>
           </el-form-item>
         </el-form>
-        <!-- <Vcode :show="VShow" @success="success" @close="close" /> -->
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script>
 import JSEncrypt from 'jsencrypt';
+import { Button } from 'vant';
+import { Form } from 'vant';
+import { Field } from 'vant';
 export default {
   name: 'Login',
+  components: {
+    [Button.name]: Button,
+    [Field.name]: Field,
+    [Form.name]: Form,
+  },
   props: {
     title: {
       type: String,
@@ -100,12 +137,7 @@ export default {
       return jse.decrypt(pas);
     },
     login() {
-      this.$refs['form'].validate((valid) => {
-        if (valid) {
-          this.success();
-        } else {
-        }
-      });
+      this.success();
     },
     success() {
       // this.close();
@@ -161,7 +193,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url('~@/assets/login/login_bg_new.png') no-repeat center / cover;
+  // background: url('~@/assets/login/login_bg_new.png') no-repeat center / cover;
 }
 ::v-deep .info_wrap {
   width: 946px;
