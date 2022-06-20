@@ -11,7 +11,7 @@ const mutations = {
     if (routeItems.length < 3) {
       // this.$store.dispatch('tagsView/initCurrentVisitedView', []);
       state.visitedViews = [];
-      return
+      return;
     }
     state.visitedViews.push(
       Object.assign({}, view, {

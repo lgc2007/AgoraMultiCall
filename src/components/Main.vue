@@ -69,7 +69,7 @@ import VoiceDot from './voice-dot/main.vue';
 import MpButtonWhite from './buttons/mp-button-white';
 import VideoButtonWhite from './buttons/video-button-white';
 import { meetingAttend } from '@/api/url';
-import AgoraRTC from 'agora-rtc-sdk-ng';
+// import AgoraRTC from 'agora-rtc-sdk-ng';
 import { Button } from 'vant';
 export default {
   name: 'Main',
@@ -81,13 +81,16 @@ export default {
   },
   props: {
     channel: {
-      type: [String, null]
+      type: String,
+      default: null,
     },
     appid: {
-      type: [String, null]
+      type: String,
+      default: null,
     },
     token: {
-      type: [String, null]
+      type: String,
+      default: null,
     }
   },
   data() {
@@ -152,8 +155,7 @@ export default {
       return str;
     },
     handleJoin() {
-      const client = AgoraRTC.createClient();
-      const client1 = AgoraRTC.createClient();
+      // const client = AgoraRTC.createClient();
       console.log('ssssss:', this.$refs.mainref.AgoraRTC.createClient(), this.$refs.mainref.AgoraRTC.createClient());
       meetingAttend({
         id: this.$store.state.user.meetingPage.id,

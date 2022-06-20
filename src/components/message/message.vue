@@ -1,3 +1,11 @@
+<!--
+ * @Description:
+ * @Version: 2.0
+ * @Autor: lgc
+ * @Date: 2022-06-17 16:21:57
+ * @LastEditors: lgc
+ * @LastEditTime: 2022-06-20 09:50:24
+-->
 <template>
   <div
     v-show="visible"
@@ -16,11 +24,11 @@
 
 <script>
 export default {
-  name: "Message",
+  name: 'Message',
   data() {
     return {
-      type: "normal",
-      info: "",
+      type: 'normal',
+      info: '',
       fix: true,
       verticalOffset: 20,
       visible: false

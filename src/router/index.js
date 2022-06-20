@@ -4,11 +4,11 @@
  * @Autor: lgc
  * @Date: 2022-05-19 15:04:26
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-17 09:09:41
+ * @LastEditTime: 2022-06-20 09:50:19
  */
 import Vue from 'vue';
 import Store from '@/store';
-import { getToken, setToken } from '@/utils/auth'; // get token from cookie
+import { getToken } from '@/utils/auth'; // get token from cookie
 import VueRouter from 'vue-router';
 import Home from '../views/Home.vue';
 import Login from '../views/login';

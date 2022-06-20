@@ -1,5 +1,13 @@
-import MessageVue from "./message.vue";
-import Vue from "vue";
+/*
+ * @Description:
+ * @Version: 2.0
+ * @Autor: lgc
+ * @Date: 2022-06-17 16:21:57
+ * @LastEditors: lgc
+ * @LastEditTime: 2022-06-20 09:47:08
+ */
+import MessageVue from './message.vue';
+import Vue from 'vue';
 
 const MessageConstructor = Vue.extend(MessageVue);
 
@@ -10,27 +18,27 @@ let instances = [];
 const Message = function(config) {
   if (Vue.prototype.$isServer) return;
 
-  if (typeof config === "string") {
+  if (typeof config === 'string') {
     config = {
-      type: "normal",
+      type: 'normal',
       info: config
     };
   }
 
-  if (config.type === "error") {
-    config.info = "❗️ " + config.info;
+  if (config.type === 'error') {
+    config.info = '❗️ ' + config.info;
   }
-  if (config.type === "success") {
-    config.info = "✅ " + config.info;
+  if (config.type === 'success') {
+    config.info = '✅ ' + config.info;
   }
-  if (config.type === "warning") {
-    config.info = "⚠️ " + config.info;
+  if (config.type === 'warning') {
+    config.info = '⚠️ ' + config.info;
   }
   if (config.el) {
     config.fix = false;
   }
 
-  const instance = new MessageConstructor({ data: { ...config } });
+  const instance = new MessageConstructor({ data: { ...config }});
   instance.$mount();
   const parentEle = config.el || document.body;
   parentEle.appendChild(instance.$el);
@@ -63,18 +71,18 @@ const Message = function(config) {
 
 Message.error = info =>
   Message({
-    type: "error",
+    type: 'error',
     info
   });
 
 Message.success = info =>
   Message({
-    type: "success",
+    type: 'success',
     info
   });
 Message.warning = info =>
   Message({
-    type: "warning",
+    type: 'warning',
     info
   });
 

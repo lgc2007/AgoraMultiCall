@@ -1,10 +1,10 @@
 /*
- * @Description: 
+ * @Description:
  * @Version: 2.0
  * @Autor: lgc
  * @Date: 2022-05-27 14:58:45
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-08 18:20:55
+ * @LastEditTime: 2022-06-20 09:50:02
  */
 import { getRtmToken } from '@/api/url';
 const state = {

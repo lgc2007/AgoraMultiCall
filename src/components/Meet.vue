@@ -237,10 +237,10 @@
 </template>
 
 <script>
-import MpButton from './buttons/mp-button';
-import CloseButton from './buttons/close-button';
-import OnCallButton from './buttons/on-call-button';
-import VideoButton from './buttons/video-button';
+// import MpButton from './buttons/mp-button';
+// import CloseButton from './buttons/close-button';
+// import OnCallButton from './buttons/on-call-button';
+// import VideoButton from './buttons/video-button';
 import VoiceDot from './voice-dot/main';
 import AvatarAudio from './avatar-audio/main';
 import PinButton from './pin-button/main';
@@ -250,10 +250,10 @@ import { Tabbar, TabbarItem, Icon, Button, Dialog, } from 'vant';
 export default {
   name: 'Meet',
   components: {
-    MpButton,
-    CloseButton,
-    OnCallButton,
-    VideoButton,
+    // MpButton,
+    // CloseButton,
+    // OnCallButton,
+    // VideoButton,
     VoiceDot,
     AvatarAudio,
     PinButton,
@@ -265,13 +265,16 @@ export default {
   },
   props: {
     channel: {
-      type: [String, null]
+      type: String,
+      default: null,
     },
     appid: {
-      type: [String, null]
+      type: String,
+      default: null,
     },
     token: {
-      type: [String, null]
+      type: String,
+      default: null,
     },
     preMute: {
       type: Boolean,
