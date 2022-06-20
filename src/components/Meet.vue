@@ -286,7 +286,7 @@ export default {
     return {
       mute: false, // 是否开启静音 (即本地音频收集和播放(如果开启了monitor),并停止向远端发送音频流)
       handleError: error => {
-        this.$toast.error(error.message || error);
+        this.$toast.fail(error.message || error);
       },
       uid: null,
       cameraIsClosed: false,
@@ -545,25 +545,25 @@ export default {
       } else {
         this.$refs.ar.start().then(({ result, message }) => {
           if (!result) {
-            this.$toast.error('加入频道错误', message);
+            this.$toast.fail('加入频道错误', message);
           }
         });
       }
     },
     handleCall() {
       if (this.inMeeting) {
-        this.$toast.error('你已经在会议了');
+        this.$toast.fail('你已经在会议了');
         return;
       }
       this.$refs.ar.start().then(({ result, message }) => {
         if (!result) {
-          this.$toast.error('加入频道错误', message);
+          this.$toast.fail('加入频道错误', message);
         }
       });
     },
     handleLeave() {
       if (!this.inMeeting) {
-        this.$toast.error('您没有参加任何会议');
+        this.$toast.fail('您没有参加任何会议');
         return;
       }
       exit({
@@ -731,7 +731,7 @@ export default {
       } else if (type === 'fallback') {
         this.streamFallbackList = [...new Set([...list, uid])];
       } else {
-        this.$toast.error('流回退类型错误');
+        this.$toast.fail('流回退类型错误');
       }
     },
     getdatalist() {
