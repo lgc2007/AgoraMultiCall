@@ -114,9 +114,9 @@ const actions = {
       })
         .then(({ obj: { records }}) => {
           commit('setState', {
-            meetingPage: (records && records[1]) || []
+            meetingPage: (records && records[0]) || []
           });
-          resolve(records[1]);
+          resolve(records[0]);
         })
         .catch(error => {
           reject(error);

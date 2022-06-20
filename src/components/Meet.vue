@@ -96,8 +96,8 @@
             "
           />
           <p>
-            {{ user_id || "you"
-            }}<span v-if="user_id === uid && inMeeting"> ( you ) </span>
+            {{ renderUser(user_id) || "you"
+            }}<span v-if="user_id === uid && inMeeting"> (你) </span>
           </p>
         </div>
         <avatar-audio
@@ -114,7 +114,7 @@
           "
           :camera-off="!playList.find(e => e.uid === user_id) || streamFallbackList.includes(user_id)"
         />
-        <div class="central">
+        <!-- <div class="central">
           <pin-button
             class="pin-button-local"
             :pined="
@@ -122,7 +122,7 @@
             "
             @click="handlePinUser(user_id || uid)"
           />
-        </div>
+        </div> -->
       </div>
     </div>
     <div class="top-operate">
@@ -176,13 +176,13 @@
                 audioStatusObj[item.uid || uid].mute !== false
             "
           />
-          <pin-button
+          <!-- <pin-button
             class="pin-button-local"
             :pined="
               pined && (item.uid ? pinedUid === item.uid : pinedUid === uid)
             "
             @click="handlePinUser(item.uid || uid)"
-          />
+          /> -->
           {{ item.uid || item }}
         </li>
       </ul>
@@ -325,6 +325,10 @@ export default {
     userType() {
       return this.$store.state.user.userDetail.userType;
     },
+    meetingUsers() {
+      // 会议人员
+      return this.$store.state.user.meetingUsers;
+    },
     meetingPage() {
       // 会议信息
       return this.$store.state.user.meetingPage;
@@ -436,6 +440,10 @@ export default {
     this.cameraIsClosed = this.preCameraOff;
   },
   methods: {
+    renderUser(userId) {
+      const { userRealName } = this.meetingUsers.filter(item => item.agoraId === userId)[0];
+      return userRealName;
+    },
     handleOpenNewPage() {
       window.open(window.location.href);
     },
@@ -831,11 +839,11 @@ video.agora_video_player
 </style>
 
 <style scoped lang="stylus">
-@import "../styles/meet/index.styl"
 
 </style>
 <style lang="scss" scoped>
-@import "@/styles/meet/player.scss";
+$main_color: #099dfd;
+// @import "@/styles/meet/player.scss";
 .microphone {
   font-size: 30px;
 }
@@ -892,5 +900,128 @@ video.agora_video_player
     font-size: 5.86667vw;
         }
     }
+}
+.player {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  // align-items: stretch;
+  width: 100vw;
+  height: calc(100vh - 90px);
+  .user-vision {
+    width: 50%;
+    height: 340px;
+    position: relative;
+    margin-bottom: 10px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    .player-vision  {
+      width: 100%;
+      height: 100%;
+    }
+    & .ban {
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      flex-direction: row;
+      cursor: pointer;
+      border-radius: 8px;
+      color: $main_color;
+      // background-color: rgba(238, 238, 238, 0.6);
+      padding: 2px 0 2px 10px;
+
+      &:hover {
+        // background-color: #eee;
+      }
+
+      p {
+        position: relative;
+        margin: 4px 0;
+        padding: 4px 10px 4px 28px;
+        word-break: keep-all;
+        white-space: nowrap;
+
+        // &:before {
+        //   position: absolute;
+        //   left: 6px;
+        //   top: 50%;
+        //   transform: translateY(-50%);
+        //   display: block;
+        //   content: "";
+        //   width: 16px;
+        //   height: 16px;
+        //   background: center / contain no-repeat url("~@/assets/yonghu.svg");
+        // }
+      }
+    }
+  }
+}
+.user-list {
+  z-index: 10;
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px 0 0 10px;
+
+  p {
+    text-indent: 10px;
+    color: #999;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+
+    li {
+      position: relative;
+      margin: 4px;
+      padding: 4px 80px 4px 28px;
+      list-style: none;
+      cursor: pointer;
+      border-radius: 8px;
+      color: $main_color;
+
+      &:hover {
+        background-color: #eee;
+      }
+
+      &:before {
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: block;
+        content: "";
+        width: 16px;
+        height: 16px;
+        background: center / contain no-repeat url("~@/assets/yonghu.svg");
+      }
+
+      .audio-dot-local {
+        position: absolute;
+        right: 45px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .pin-button-local {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+  }
 }
 </style>
