@@ -113,10 +113,19 @@ const actions = {
         // meetingName: '测试会议0610'
       })
         .then(({ obj: { records }}) => {
-          commit('setState', {
-            meetingPage: (records && records[0]) || []
-          });
-          resolve(records[0]);
+          if (records && records.length) {
+            if (records.length > 1) {
+              commit('setState', {
+                meetingPage: (records && records[records.length - 1]) || []
+              });
+            } else {
+              commit('setState', {
+                meetingPage: (records && records[0]) || []
+              });
+            }
+          }
+
+          resolve();
         })
         .catch(error => {
           reject(error);

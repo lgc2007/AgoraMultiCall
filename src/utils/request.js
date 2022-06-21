@@ -4,7 +4,7 @@
  * @Autor: lgc
  * @Date: 2021-11-24 15:40:19
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-10 10:39:39
+ * @LastEditTime: 2022-06-20 18:08:12
  */
 import axios from 'axios';
 import { MessageBox, Message } from 'element-ui';
@@ -12,7 +12,7 @@ import store from '@/store';
 import { getToken } from '@/utils/auth';
 // 创建实例
 const service = axios.create({
-  baseURL: process.env.VUE_APP_BASE_URL, // url = base url + request url
+  // baseURL: process.env.VUE_APP_BASE_URL, // url = base url + request url
   // withCredentials: true, // 当跨域请求时发送cookie
   timeout: 60000, // 超时时间
 });

@@ -17,6 +17,7 @@
         @user-published="handleUserPublished"
         @user-left="handleUserLeft"
         @join-success="handleJoinSuccess"
+        @join-failed="handleJoinFailed"
         @client-created="handleClientCreated"
         @stream-fallback="handleStreamFallback"
       >
@@ -458,6 +459,9 @@ export default {
       this.uid = uid;
       this.$toast.success('成功加入会议');
     },
+    handleJoinFailed(reason) {
+      console.log('加入会议失败：', reason, reason.message);
+    },
     base64ToUint8Array(base64Str) {
       // 声明一个工具函数，用于将 Base64 转换成 Uint8Array。
       const raw = window.atob(base64Str);
@@ -536,7 +540,7 @@ export default {
       const videoTrack = this.$refs.videoSender
         .getTrack()
         .getMediaStreamTrack();
-      this.$refs.localCameraPlayer.srcObject = new MediaStream([videoTrack]);
+      // this.$refs.localCameraPlayer.srcObject = new MediaStream([videoTrack]);
     },
     handleMeet() {
       if (this.inMeeting) {
