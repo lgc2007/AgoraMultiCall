@@ -71,6 +71,8 @@ import VideoButtonWhite from './buttons/video-button-white';
 import { meetingAttend } from '@/api/url';
 // import AgoraRTC from 'agora-rtc-sdk-ng';
 import { Button } from 'vant';
+// import AgoraRTM from 'agora-rtm-sdk';
+import RtmClient from '@/utils/rtm-client.js';
 export default {
   name: 'Main',
   components: {
@@ -110,7 +112,16 @@ export default {
     },
     playerClass() {
       return this.cameraOff ? 'camera-off' : '';
-    }
+    },
+    rtmToken() {
+      return this.$store.state.user.rtmToken;
+    },
+    userId() {
+      return this.$store.state.user.userId;
+    },
+    channelName() {
+      return this.$store.state.user.channelName;
+    },
   },
   methods: {
     handleVideoReady(localVideo) {
@@ -154,6 +165,134 @@ export default {
       for (let i = 0; i < hex.length; i += 2) { str += String.fromCharCode(parseInt(hex.substr(i, 2), 16)); }
       return str;
     },
+    subscribeClientEvents () {
+      // 订阅客户端事件
+      const clientEvents = [
+        'ConnectionStateChanged',
+        'MessageFromPeer'
+      ];
+      clientEvents.forEach((eventName) => {
+        this.client.on(eventName, (...args) => {
+          console.log('emit ', eventName, ...args);
+          // log event message
+          this.emit(eventName, ...args);
+        });
+      });
+    },
+    subscribeChannelEvents (channelName) {
+      // 订阅频道事件
+      const channelEvents = [
+        'ChannelMessage',
+        'MemberJoined',
+        'MemberLeft'
+      ];
+      channelEvents.forEach((eventName) => {
+        this.channels[channelName].channel.on(eventName, (...args) => {
+          console.log('emit ', eventName, args);
+          this.emit(eventName, { channelName, args: args });
+        });
+      });
+    },
+    async login (accountName, token) {
+      this.accountName = accountName;
+      return this.client.login({ uid: this.accountName, token });
+    },
+    async logout () {
+      return this.client.logout();
+    },
+    async joinChannel (name) {
+      console.log('joinChannel', name);
+      const channel = this.client.createChannel(name);
+      this.channels[name] = {
+        channel,
+        joined: false // channel state
+      };
+      this.subscribeChannelEvents(name);
+      return channel.join();
+    },
+    async leaveChannel (name) {
+      console.log('leaveChannel', name);
+      if (!this.channels[name] ||
+      (this.channels[name] &&
+        !this.channels[name].joined)) return;
+      return this.channels[name].channel.leave();
+    },
+
+    // async joinRtm() {
+    //   const options = {
+    //     uid: this.userId,
+    //     token: this.rtmToken,
+    //   };
+    //   const appID = this.appid;
+    //   // 初始化客户端
+    //   const client = AgoraRTM.createInstance(appID);
+    //   const channel = client.createChannel(this.channelName);
+    //   console.log(client);
+    //   await client.login(options);
+    //   await channel.join().then(() => {
+    //     console.log('You have successfully joined channel', channel.channelId);
+    //   });
+    //   // 客户端事件监听
+    //   // 显示对端发送的消息
+    //   client.on('MessageFromPeer', function (message, peerId) {
+    //     console.log('显示对端发送的消息:', message, peerId);
+    //   });
+    //   // 显示连接状态变化
+    //   client.on('ConnectionStateChanged', function (state, reason) {
+    //     console.log('显示连接状态变化:', state, reason);
+    //   });
+
+    //   channel.on('ChannelMessage', function (message, memberId) {
+    //     console.log('ChannelMessage:', message, memberId);
+    //   });
+    //   // 显示频道
+    //   channel.on('MemberJoined', function (memberId) {
+    //     console.log('显示频道:', memberId);
+    //   });
+    //   // 频道成员
+    //   channel.on('MemberLeft', function (memberId) {
+    //     console.log('频道成员:', memberId);
+    //   });
+    // },
+
+    async joinRtm() {
+      const rtm = new RtmClient();
+      rtm.init(this.appid);
+      window.rtm = rtm;
+      console.log('sssss', String(this.userId), this.rtmToken);
+      await rtm.login(String(this.userId), this.rtmToken).then(() => {
+        console.log('登陆成功');
+        rtm._logined = true;
+        this.$toast('Login: ' + this.userId, ' token: ', this.rtmToken);
+      }).catch((err) => {
+        console.log(err);
+      });
+      rtm.joinChannel(this.channelName).then(() => {
+        console.log(rtm.accountName, ' 加入成功');
+        rtm.channels[this.channelName].joined = true;
+      }).catch((err) => {
+        this.$toast.fail('加入失败');
+        console.error(err);
+      });
+      rtm.on('MessageFromPeer', async (message, peerId) => {
+        // 显示对端发送的消息
+        console.log('显示对端发送的消息message ' + message.text + ' peerId' + peerId);
+      });
+      rtm.on('MemberJoined', ({ channelName, args }) => {
+        // 显示频道
+        const memberId = args[0];
+        console.log('显示频道channel ', channelName, ' member: ', memberId, ' joined');
+      });
+      rtm.on('MemberLeft', ({ channelName, args }) => {
+        // 频道成员
+        const memberId = args[0];
+        console.log('频道成员channel ', channelName, ' member: ', memberId, ' joined');
+      });
+      rtm.on('ChannelMessage', async ({ channelName, args }) => {
+        const [message, memberId] = args;
+        console.log('频道消息channel ', channelName, ', messsage: ', message.text, ', memberId: ', memberId);
+      });
+    },
     handleJoin() {
       // const client = AgoraRTC.createClient();
       console.log('ssssss:', this.$refs.mainref.AgoraRTC.createClient(), this.$refs.mainref.AgoraRTC.createClient());
@@ -166,6 +305,7 @@ export default {
         this.$store.commit('user/setState', {
           channelName, meetingUsers, rtcToken, salt, secretKey, encryptSalt: this.base64ToUint8Array(salt), encryptSecretKey: this.hex2ascii(secretKey)
         });
+        this.joinRtm();
         // console.log('ccc:', this.hex2ascii(secretKey), 'bbb:', this.base64ToUint8Array(salt));
         // client.setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
         // this.$refs.mainref.AgoraRTC.createClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));

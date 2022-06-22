@@ -68,6 +68,7 @@
         :key="user_id"
         class="user-vision"
         :class="{
+          isHost: !meetingUsers.find(e => {return e.agoraId === user_id}).userType,
           'screen-share-vision': user_id === shareScreenUID,
           'screen-share-vision-pined':
             user_id === shareScreenUID && user_id === pinedUid
@@ -78,6 +79,7 @@
           v-show="!streamFallbackList.includes(user_id)"
           v-player="playList.find(e => e.uid === user_id)"
           class="player-vision"
+          :class="{isHost: !userType}"
         ></div>
         <div class="ban">
           <pin-button
@@ -581,6 +583,15 @@ export default {
         this.$toast.fail('您没有参加任何会议');
         return;
       }
+      const rtm = window.rtm;
+      rtm.logout().then(() => {
+        console.log('logout');
+        rtm._logined = false;
+        this.$toast('退出: ' + rtm.accountName);
+      }).catch((err) => {
+        this.$toast('退出失败, 请在控制台查看消息');
+        console.log(err);
+      });
       exit({
         id: this.meetingPage.id,
       }).then(({ obj }) => {
@@ -966,6 +977,9 @@ $main_color: #099dfd;
         // }
       }
     }
+  }
+  .isHost {
+    order: -1;
   }
 }
 .user-list {

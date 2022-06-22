@@ -11,6 +11,7 @@
   "dependencies": {
     "agora-rtc-sdk-ng": "^4.12.0",
     "agora-rtc-vue": "^0.2.53",
+    "agora-rtm-sdk": "^1.4.5",
     "axios": "^0.27.2",
     "core-js": "^3.6.5",
     "element-ui": "^2.15.6",
