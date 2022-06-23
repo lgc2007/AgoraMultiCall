@@ -14,6 +14,7 @@
           this.$toast.fail(error.message || error);
         }
       "
+      @rtc-loaded="handleUserLoaded"
     >
       <agora-video-sender
         customization-player
@@ -98,9 +99,9 @@ export default {
   data() {
     return {
       localVideoDirective: null,
-      mute: false,
+      mute: true,
       level: 0,
-      cameraOff: false
+      cameraOff: true
     };
   },
   computed: {
@@ -259,7 +260,6 @@ export default {
       const rtm = new RtmClient();
       rtm.init(this.appid);
       window.rtm = rtm;
-      console.log('sssss', String(this.userId), this.rtmToken);
       await rtm.login(String(this.userId), this.rtmToken).then(() => {
         console.log('登陆成功');
         rtm._logined = true;
@@ -290,30 +290,89 @@ export default {
       });
       rtm.on('ChannelMessage', async ({ channelName, args }) => {
         const [message, memberId] = args;
+        console.log('sssss:', JSON.parse(message.text));
+        const { action, userId, reason, rotate, audioState, videoState } = JSON.parse(message.text);
+        if (rotate) {
+          switch (reason.action) {
+            case 'EXIT_MEETING':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, isOnline: 0 }]);
+              break;
+            case 'ATTEND_MEETING':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, isOnline: 1, audioState: reason.audioState, videoState: reason.videoState }]);
+              break;
+            case 'TURN_OFF_VIDEO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, videoState: 0 }]);
+              break;
+            case 'TURN_ON_VIDEO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, videoState: 1 }]);
+              break;
+            case 'TURN_OFF_AUDIO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, audioState: 0 }]);
+              break;
+            case 'TURN_ON_AUDIO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, audioState: 1 }]);
+              break;
+            case 'ATTEND_SPEECHSEAT':
+              this.$store.dispatch('user/UPDATE_MEETING', [...(rotate.map((item, index) => {
+                return { ...item, isSpeech: 0 };
+              })), { isSpeech: 1, audioState: reason.audioState, userId: reason.userId, videoState: reason.videoState }]);
+              break;
+            case 'EXIT_SPEECHSEAT':
+              this.$store.dispatch('user/UPDATE_MEETING', [...rotate, { isSpeech: 0, audioState: reason.audioState, userId: reason.userId, videoState: reason.videoState }]);
+              break;
+            default:
+              break;
+          }
+        } else {
+          switch (action) {
+            case 'EXIT_MEETING':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: userId, isOnline: 0, }]);
+              break;
+            case 'ATTEND_MEETING':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: userId, isOnline: 1, audioState, videoState }]);
+              break;
+            case 'TURN_OFF_VIDEO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: userId, videoState: 0 }]);
+              break;
+            case 'TURN_ON_VIDEO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: userId, videoState: 1 }]);
+              break;
+            case 'TURN_OFF_AUDIO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: userId, audioState: 0 }]);
+              break;
+            case 'TURN_ON_AUDIO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: userId, audioState: 1 }]);
+              break;
+            case 'TURN_OFF_ALL_VIDEO':
+              this.$store.commit('user/TURN_OFF_ALL_VIDEO');
+              break;
+            default:
+              break;
+          }
+        }
         console.log('频道消息channel ', channelName, ', messsage: ', message.text, ', memberId: ', memberId);
       });
     },
     handleJoin() {
       // const client = AgoraRTC.createClient();
-      console.log('ssssss:', this.$refs.mainref.AgoraRTC.createClient(), this.$refs.mainref.AgoraRTC.createClient());
       meetingAttend({
         id: this.$store.state.user.meetingPage.id,
       }).then(({ obj: {
         channelName, meetingUsers, rtcToken, salt, secretKey
       }}) => {
-        console.log(channelName, meetingUsers, rtcToken, salt, secretKey);
         this.$store.commit('user/setState', {
-          channelName, meetingUsers, rtcToken, salt, secretKey, encryptSalt: this.base64ToUint8Array(salt), encryptSecretKey: this.hex2ascii(secretKey)
+          channelName, meetingUsers, rtcToken, salt, secretKey, encryptSalt: this.base64ToUint8Array(salt), encryptSecretKey: this.hex2ascii(secretKey),
         });
-        this.joinRtm();
+        // this.joinRtm();
+        const { audioState, videoState, isRotate, isSpeech } = meetingUsers.find(m => m.agoraId === this.$store.state.user.agoraId);
         // console.log('ccc:', this.hex2ascii(secretKey), 'bbb:', this.base64ToUint8Array(salt));
         // client.setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
         // this.$refs.mainref.AgoraRTC.createClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
         // this.$refs.mainref.getClient().setEncryptionConfig('aes-128-gcm2', this.hex2ascii(secretKey), this.base64ToUint8Array(salt));
         this.$emit('join-meeting', {
           channel: channelName || this.channel,
-          mute: this.mute,
-          cameraOff: this.cameraOff
+          mute: !audioState,
+          cameraOff: !videoState
         });
       });
     },
@@ -322,7 +381,12 @@ export default {
     },
     handleVideoClick() {
       this.cameraOff = !this.cameraOff;
-    }
+    },
+    handleUserLoaded() {
+      this.$refs.mainref.getAgoraRtc().setLogLevel(2);
+      // SDK加载完成，此时可以读取 AgoraRTC 对象, 在此之前调用 getAgoraRTC 是拿不到 AgoraRTC 对象的。
+      console.log('SDK加载完成:');
+    },
   }
 };
 </script>

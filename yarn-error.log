@@ -18,7 +18,7 @@ Trace:
 
 npm manifest: 
   {
-    "name": "Agora_Web_Multi_party_Call_Demo.Vue",
+    "name": "一键直连测试Demo",
     "version": "0.1.0",
     "private": true,
     "scripts": {

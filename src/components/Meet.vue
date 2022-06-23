@@ -3,6 +3,7 @@
     <div class="local_player">
       <agora
         ref="ar"
+        :log-level="2"
         :channel="channel"
         :appid="appid"
         :token="token"
@@ -20,6 +21,7 @@
         @join-failed="handleJoinFailed"
         @client-created="handleClientCreated"
         @stream-fallback="handleStreamFallback"
+        @unsubscribe="handleUnsubscribe"
       >
         <agora-audio-sender
           ref="audioSender"
@@ -57,66 +59,62 @@
         ></agora-video-sender>
       </agora> -->
     </div>
-    <div
-      class="player"
-      :class="{
-        'screen-share-player': youAreShareScreening || otherIsShareScreening
-      }"
-    >
+    <div class="player player-host">
+      <!-- 主持人 -->
       <div
-        v-for="user_id in userIdList"
-        :key="user_id"
+        v-for="onlineHost in meetingUsers.filter(f => (f.isOnline === 1) && (f.userType === 0)) || []"
+        :key="onlineHost.agoraId"
+        class="user-vision online-host"
+      >
+        <div
+          v-if="playList.find(e => e.uid === onlineHost.agoraId) && onlineHost.videoState"
+          v-show="!streamFallbackList.includes(onlineHost.agoraId)"
+          v-player="playList.find(e => e.uid === onlineHost.agoraId)"
+          class="player-vision"
+        ></div>
+        <div class="ban">
+          <svg-icon :icon-class="onlineHost.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
+          <p>
+            {{ renderUser(onlineHost.agoraId) || "you"
+            }}<span v-if="onlineHost.agoraId === uid && inMeeting"> (你) </span>
+          </p>
+        </div>
+        <avatar-audio v-if="!onlineHost.videoState" />
+        />
+      </div>
+      <!-- 在线普通用户 -->
+    </div>
+    <div class="player">
+      <div
+        v-for="online in meetingUsers.filter(f => (f.isOnline === 1) && (f.userType === 1))"
+        :key="online.agoraId"
         class="user-vision"
         :class="{
-          isHost: !meetingUsers.find(e => {return e.agoraId === user_id}).userType,
-          'screen-share-vision': user_id === shareScreenUID,
+          isSpeech: !!meetingUsers.find(e => {return e.agoraId === online.agoraId}).isSpeech,
+          isHost: !meetingUsers.find(e => {return e.agoraId === online.agoraId}).userType,
+          'screen-share-vision': online.agoraId === shareScreenUID,
           'screen-share-vision-pined':
-            user_id === shareScreenUID && user_id === pinedUid
+            online.agoraId === shareScreenUID && online.agoraId === pinedUid
         }"
       >
         <div
-          v-if="playList.find(e => e.uid === user_id)"
-          v-show="!streamFallbackList.includes(user_id)"
-          v-player="playList.find(e => e.uid === user_id)"
+          v-if="playList.find(e => e.uid === online.agoraId) && online.videoState"
+          v-show="!streamFallbackList.includes(online.agoraId)"
+          v-player="playList.find(e => e.uid === online.agoraId)"
           class="player-vision"
-          :class="{isHost: !userType}"
         ></div>
         <div class="ban">
-          <pin-button
-            v-if="pined && user_id === pinedUid"
+          <!-- <pin-button
+            v-if="pined && online.agoraId === pinedUid"
             :could-hover="false"
-          />
-          <voice-dot
-            :level="
-              audioStatusObj[user_id || uid] &&
-                audioStatusObj[user_id || uid].level
-                ? audioStatusObj[user_id || uid].level
-                : 0
-            "
-            :mute="
-              audioStatusObj[user_id || uid] &&
-                audioStatusObj[user_id || uid].mute !== false
-            "
-          />
+          /> -->
+          <svg-icon :icon-class="online.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
           <p>
-            {{ renderUser(user_id) || "you"
-            }}<span v-if="user_id === uid && inMeeting"> (你) </span>
+            {{ renderUser(online.agoraId) || "you"
+            }}<span v-if="online.agoraId === uid && inMeeting"> (你) </span>
           </p>
         </div>
-        <avatar-audio
-          avatar="../assets/yonghu.svg"
-          :level="
-            audioStatusObj[user_id || uid] &&
-              audioStatusObj[user_id || uid].level
-              ? audioStatusObj[user_id || uid].level
-              : 0
-          "
-          :mute="
-            audioStatusObj[user_id || uid] &&
-              audioStatusObj[user_id || uid].mute !== false
-          "
-          :camera-off="!playList.find(e => e.uid === user_id) || streamFallbackList.includes(user_id)"
-        />
+        <avatar-audio v-if="!online.videoState" />
         <!-- <div class="central">
           <pin-button
             class="pin-button-local"
@@ -191,12 +189,20 @@
       </ul>
     </div>
     <div class="tabbar">
-      <div class="tabbar-item" @click="handleMute">
+      <div v-if="userSelfDetail.userType" class="tabbar-item" @click="handleSpeech">
         <div class="tabbar-item-icon">
-          <svg-icon :icon-class="mute ? 'microphone_mute' : 'microphone'" class-name="microphone" />
+          <svg-icon icon-class="pin_img" class-name="microphone" />
         </div>
         <div class="tabbar-item-text">
-          <span>{{ userType ? '我要发言' : '语音' }}</span>
+          <span>{{ userSelfDetail.isSpeech ? '结束发言' : '我要发言' }}</span>
+        </div>
+      </div>
+      <div v-if="userSelfDetail.isSpeech" class="tabbar-item" @click="audioSwitch">
+        <div class="tabbar-item-icon">
+          <svg-icon :icon-class="userSelfDetail.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
+        </div>
+        <div class="tabbar-item-text">
+          <span>语音</span>
         </div>
       </div>
       <div class="tabbar-item" @click="handleCamera">
@@ -249,6 +255,7 @@ import AvatarAudio from './avatar-audio/main';
 import PinButton from './pin-button/main';
 import { meetingTurn, exit, speechSeatAttend, speechSeatExit } from '@/api/url';
 import { Tabbar, TabbarItem, Icon, Button, Dialog, } from 'vant';
+import RtmClient from '@/utils/rtm-client.js';
 
 export default {
   name: 'Meet',
@@ -325,12 +332,18 @@ export default {
     userId() {
       return this.$store.state.user.userId;
     },
+    userSelfDetail() {
+      return this.$store.state.user.meetingUsers.find(item => item.agoraId === this.$store.state.user.agoraId);
+    },
     userType() {
       return this.$store.state.user.userDetail.userType;
     },
     meetingUsers() {
       // 会议人员
       return this.$store.state.user.meetingUsers;
+    },
+    rtmToken() {
+      return this.$store.state.user.rtmToken;
     },
     meetingPage() {
       // 会议信息
@@ -442,6 +455,9 @@ export default {
     this.mute = this.preMute;
     this.cameraIsClosed = this.preCameraOff;
   },
+  mounted() {
+    console.log('ddddd', this.$refs.ar);
+  },
   methods: {
     renderUser(userId) {
       const { userRealName } = this.meetingUsers.filter(item => item.agoraId === userId)[0];
@@ -483,6 +499,7 @@ export default {
       return str;
     },
     handleUserLoaded() {
+      this.$refs.ar.getAgoraRtc().setLogLevel(2);
       // SDK加载完成，此时可以读取 AgoraRTC 对象, 在此之前调用 getAgoraRTC 是拿不到 AgoraRTC 对象的。
       console.log('SDK加载完成:');
     },
@@ -498,42 +515,38 @@ export default {
       window._sClient = this.$refs?.screenAr?.getClient();
       // client.setStreamFallbackOption()
     },
-    handleMute() { // 开关麦克风
-      if (this.userType) {
-        if (this.mute) {
-          Dialog.confirm({
-            title: '温馨提醒',
-            message: '您确定要发言吗？',
-          })
-            .then(() => {
-            // on confirm
-              speechSeatAttend({
-                id: this.meetingPage.id,
-              }).then(({ obj }) => {
-                this.mute = !this.mute;
-              });
-            })
-            .catch(() => {
-            // on cancel
-            });
-        } else {
-          speechSeatExit({
-            id: this.meetingPage.id,
-          }).then(({ obj }) => {
-            this.mute = !this.mute;
-          });
-        }
+    handleSpeech() {
+      // 上/下 发言席发
+      if (this.userSelfDetail.isSpeech) {
+        speechSeatExit({
+          id: this.meetingPage.id,
+        }).then(({ obj }) => {
+          // this.mute = !this.mute;
+        });
       } else {
-        this.audioSwitch();
+        Dialog.confirm({
+          title: '温馨提醒',
+          message: '您确定要发言吗？',
+        })
+          .then(() => {
+            // on confirm
+            speechSeatAttend({
+              id: this.meetingPage.id,
+            }).then(({ obj }) => {
+              this.mute = !this.mute;
+            });
+          })
+          .catch(() => {
+            // on cancel
+          });
       }
     },
     audioSwitch() {
-      this.mute = !this.mute;
-      this.$toast(`麦克风 ${this.mute ? '关' : '开'}`);
+      this.$toast(`麦克风 ${this.userSelfDetail.audioState ? '关' : '开'}`);
       meetingTurn({
         id: this.meetingPage.id,
         'agoraType': 'AUDIO', // 音频AUDIO，视频VIDEO
-        'state': this.mute ? 1 : 0		// 0关闭，1开启
+        'state': this.userSelfDetail.audioState ? 0 : 1		// 0关闭，1开启
       }).then(({ obj }) => {
         console.log(obj);
       });
@@ -772,6 +785,9 @@ export default {
         });
       });
     },
+    handleUnsubscribe(uid, type) {
+      this.$refs.ar.unsubscribe('673991659', 'video');
+    },
     toggleCamera() {
       this.getdatalist();
       const _this = this;
@@ -842,6 +858,111 @@ export default {
           mediaDevice.count = `${count++}`;
           _this.dataList.push(mediaDevice);
         }
+      });
+    },
+    async joinRtm() {
+      const rtm = new RtmClient();
+      rtm.init(this.appid);
+      window.rtm = rtm;
+      await rtm.login(String(this.userId), this.rtmToken).then(() => {
+        console.log('登陆成功');
+        rtm._logined = true;
+        this.$toast('Login: ' + this.userId, ' token: ', this.rtmToken);
+      }).catch((err) => {
+        console.log(err);
+      });
+      rtm.joinChannel(this.channelName).then(() => {
+        console.log(rtm.accountName, ' 加入成功');
+        rtm.channels[this.channelName].joined = true;
+      }).catch((err) => {
+        this.$toast.fail('加入失败');
+        console.error(err);
+      });
+      rtm.on('MessageFromPeer', async (message, peerId) => {
+        // 显示对端发送的消息
+        console.log('显示对端发送的消息message ' + message.text + ' peerId' + peerId);
+      });
+      rtm.on('MemberJoined', ({ channelName, args }) => {
+        // 显示频道
+        const memberId = args[0];
+        console.log('显示频道channel ', channelName, ' member: ', memberId, ' joined');
+      });
+      rtm.on('MemberLeft', ({ channelName, args }) => {
+        // 频道成员
+        const memberId = args[0];
+        console.log('频道成员channel ', channelName, ' member: ', memberId, ' joined');
+      });
+      rtm.on('ChannelMessage', async ({ channelName, args }) => {
+        const [message, memberId] = args;
+        console.log('sssss:', JSON.parse(message.text));
+        const { action, userId, reason, rotate, audioState, videoState } = JSON.parse(message.text);
+        if (rotate) {
+          switch (reason.action) {
+            case 'EXIT_MEETING':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, isOnline: 0 }]);
+              break;
+            case 'ATTEND_MEETING':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, isOnline: 1, audioState: reason.audioState, videoState: reason.videoState }]);
+              break;
+            case 'TURN_OFF_VIDEO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, videoState: 0 }]);
+              break;
+            case 'TURN_ON_VIDEO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, videoState: 1 }]);
+              break;
+            case 'TURN_OFF_AUDIO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, audioState: 0 }]);
+              break;
+            case 'TURN_ON_AUDIO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId: reason.userId, audioState: 1 }]);
+              break;
+            case 'ATTEND_SPEECHSEAT':
+              this.$store.dispatch('user/UPDATE_MEETING', [...(rotate.map((item, index) => {
+                return { ...item, isSpeech: 0 };
+              })), { isSpeech: 1, audioState: reason.audioState, userId: reason.userId, videoState: reason.videoState }]);
+              break;
+            case 'EXIT_SPEECHSEAT':
+              this.$store.dispatch('user/UPDATE_MEETING', [...rotate, { isSpeech: 0, audioState: reason.audioState, userId: reason.userId, videoState: reason.videoState }]);
+              break;
+            default:
+              break;
+          }
+        } else {
+          switch (action) {
+            case 'EXIT_MEETING':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId, isOnline: 0, }]);
+              break;
+            case 'ATTEND_MEETING':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId, isOnline: 1, audioState, videoState }]);
+              break;
+            case 'TURN_OFF_VIDEO':
+              if (String(userId) === String(this.userId) && !this.localDirective) {
+                // 打开本地视频
+                this.cameraIsClosed = true;
+              }
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId, videoState: 0 }]);
+              break;
+            case 'TURN_ON_VIDEO':
+              if (String(userId) === String(this.userId) && !this.localDirective) {
+                // 打开本地视频
+                this.cameraIsClosed = false;
+              }
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId, videoState: 1 }]);
+              break;
+            case 'TURN_OFF_AUDIO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId, audioState: 0 }]);
+              break;
+            case 'TURN_ON_AUDIO':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ userId, audioState: 1 }]);
+              break;
+            case 'TURN_OFF_ALL_VIDEO':
+              this.$store.commit('user/TURN_OFF_ALL_VIDEO');
+              break;
+            default:
+              break;
+          }
+        }
+        console.log('频道消息channel ', channelName, ', messsage: ', message.text, ', memberId: ', memberId);
       });
     },
   }
@@ -916,16 +1037,19 @@ $main_color: #099dfd;
         }
     }
 }
+.player-host {
+  height: 340px;
+}
 .player {
-  position: absolute;
-  top: 50px;
-  left: 0;
+  // position: absolute;
+  // top: 50px;
+  // left: 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   // align-items: stretch;
   width: 100vw;
-  height: calc(100vh - 90px);
+  // height: calc(100vh - 90px);
   .user-vision {
     width: 50%;
     height: 340px;
@@ -978,7 +1102,7 @@ $main_color: #099dfd;
       }
     }
   }
-  .isHost {
+  .isSpeech {
     order: -1;
   }
 }

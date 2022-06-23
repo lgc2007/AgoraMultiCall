@@ -9,6 +9,7 @@ import {
 import { getInfo } from '@/api/user';
 import { getToken, setToken, removeToken } from '@/utils/auth';
 import router, { resetRouter } from '@/router';
+import Vue from 'vue';
 
 const getDefaultState = () => {
   return {
@@ -22,6 +23,7 @@ const getDefaultState = () => {
     menu: [],
     meetingDetail: {},
     userDetail: {},
+    meetingUsers: [],
     openlogin: false,
     operations: {},
     name: '',
@@ -37,6 +39,42 @@ const mutations = {
     for (const [key, val] of Object.entries(opt)) {
       state[key] = val;
     }
+  },
+  //  return {
+  //         ...item,
+  //         isOnline: value
+  //       };
+  TURN_OFF_ALL_VIDEO(state, params) {
+    state.meetingUsers.map((item, index) => {
+      if (item.userType) {
+        Vue.set(item, 'videoState', 0);
+      }
+    });
+  },
+  UPDATE_USER_LIST(state, params) {
+    console.log(params);
+    params.map(m => {
+      const index = state.meetingUsers.findIndex(item => String(item.agoraId) === String(m.userId));
+      const obj = state.meetingUsers.find(item => String(item.agoraId) === String(m.userId));
+      Vue.set(state.meetingUsers, index, {
+        ...obj,
+        ...m
+      });
+    });
+    // const index = state.meetingUsers.findIndex(item => String(item.agoraId) === params.userId);
+    // const obj = state.meetingUsers.find(item => String(item.agoraId) === params.userId);
+    // Vue.set(state.meetingUsers, index, {
+    //   ...obj,
+    //   ...params
+    // });
+    // state.meetingUsers.map((item, index) => {
+    //   if (String(item.agoraId) === userId) {
+    //     item;
+    //   }
+    //   return item;
+    // });
+    // state.meetingUsers = value;
+    // state.meetingUsers.push();
   },
   SET_TOKEN: (state, token) => {
     state.token = token;
@@ -141,6 +179,7 @@ const actions = {
             commit('setState', {
               meetingDetail: obj,
               userDetail,
+              meetingUsers: obj.meetingUsers,
             });
           }
 
@@ -166,6 +205,9 @@ const actions = {
           reject(error);
         });
     });
+  },
+  UPDATE_MEETING({ commit, state }, params) {
+    commit('UPDATE_USER_LIST', params);
   },
   // getMenu
   generateRoutes({ commit }, params) {

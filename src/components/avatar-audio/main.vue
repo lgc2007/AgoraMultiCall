@@ -1,27 +1,13 @@
 <template>
   <div
     class="avatar-icon"
-    :style="computedStyle"
-    :class="{ ring: showRing }"
   ></div>
 </template>
 
 <script>
-const MAX_LEVEL = 1;
-const MIN_LEVEL = 0;
-const LEVEL_INTERVAL = MAX_LEVEL - MIN_LEVEL;
-const MAX_WIDTH = 60;
-
-const MAGNIFY_LEVEL_0 = MIN_LEVEL + LEVEL_INTERVAL / 10;
-const MAGNIFY_LEVEL_1 = MIN_LEVEL + LEVEL_INTERVAL / 5;
-const MAGNIFY_LEVEL_2 = MIN_LEVEL + LEVEL_INTERVAL / 4;
-const MAGNIFY_LEVEL_3 = MIN_LEVEL + LEVEL_INTERVAL / 3;
-const MAGNIFY_LEVEL_4 = MIN_LEVEL + LEVEL_INTERVAL / 2;
-
-const RING_INTERVAL = 4000;
 
 export default {
-  name: "AvatarAudio",
+  name: 'AvatarAudio',
   props: {
     level: {
       type: Number,
@@ -43,49 +29,6 @@ export default {
       timestamp: Date.now()
     };
   },
-  computed: {
-    computedStyle() {
-      return {
-        "border-width": !this.mute ? this.borderWidth + "px" : 0,
-        "z-index": this.cameraOff ? 1 : -1
-      };
-    }
-  },
-  watch: {
-    level: {
-      immediate: true,
-      handler(newV, oldV) {
-        const level = Math.round((newV / LEVEL_INTERVAL) * 100) / 100;
-        const width =
-          MAX_WIDTH * level +
-          level *
-            (level < MAGNIFY_LEVEL_1
-              ? 80
-              : level < MAGNIFY_LEVEL_2
-              ? 40
-              : level < MAGNIFY_LEVEL_3
-              ? 40
-              : level < MAGNIFY_LEVEL_4
-              ? 40
-              : 20);
-        this.borderWidth = Math.round(width);
-        if (
-          newV > MAGNIFY_LEVEL_0 &&
-          oldV <= MAGNIFY_LEVEL_0 &&
-          Date.now() - this.timestamp > RING_INTERVAL
-        ) {
-          this.showRing = true;
-        }
-      }
-    },
-    showRing(newV) {
-      if (newV) {
-        setTimeout(() => {
-          this.showRing = false;
-        }, RING_INTERVAL);
-      }
-    }
-  }
 };
 </script>
 
@@ -111,9 +54,9 @@ $main_interval=0.6s
   //transition border-width 0.01s ease-in
   box-sizing content-box
   transform-origin center
-  &.ring:after{
-    animation wave 3s linear
-  }
+  // &.ring:after{
+  //   animation wave 3s linear
+  // }
 
   @keyframes wave{
     0%{

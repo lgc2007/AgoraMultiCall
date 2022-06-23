@@ -2,6 +2,7 @@
   <div class="home">
     <meet
       v-if="isJoinMeeting"
+      ref="meetRefParent"
       :channel="channelName"
       :appid="appid"
       :token="rtcToken"
@@ -98,6 +99,10 @@ export default {
     handleJoinMeeting(config) {
       this.isJoinMeeting = true;
       this.config = config;
+      this.$nextTick(() => {
+        console.log('rrrrrrrrrrr', this.$refs.meetRefParent);
+        this.$refs.meetRefParent.joinRtm();
+      });
     },
     handleLeaveMeeting() {
       this.isJoinMeeting = false;
