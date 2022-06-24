@@ -83,7 +83,7 @@
       <!-- 在线普通用户 -->
     </div>
     <div class="player online-wrap">
-      <!-- <van-swipe :loop="false" :width="300">
+      <!-- <van-swipe :show-indicators="false" :loop="true" width="50%" autoplay="3000">
         <van-swipe-item> -->
       <div
         v-for="online in meetingUsers.filter(f => (f.isOnline === 1) && (f.userType === 1))"
@@ -120,15 +120,15 @@
       </van-swipe> -->
     </div>
     <div class="top-operate">
-      <!-- <div class="top-operate-left" @click="toggleCamera">
-        <van-button v-for="(item,index) in dataList" :key="index" type="primary" @click="videoClick(item)">{{ item.count }}</van-button>
-        <van-button icon="exchange" type="primary">切换</van-button>
-      </div> -->
+      <div class="top-operate-left" @click="toggleCameraTest">
+        <!-- <van-button v-for="(item,index) in dataList" :key="index" type="primary" @click="videoClick(item)">{{ item.count }}</van-button> -->
+        <van-button icon="exchange" type="info">切换</van-button>
+      </div>
       <!-- <div class="top-operate-right" @click="handleCall">
         <van-button type="primary">加入</van-button>
       </div> -->
       <div class="top-operate-right" @click="handleLeave">
-        <van-button type="primary">离开</van-button>
+        <van-button type="info">离开</van-button>
       </div>
     </div>
     <!-- <div class="notify">
@@ -176,7 +176,7 @@
             "
             @click="handlePinUser(item.uid || uid)"
           /> -->
-          {{ item.uid || item }}
+          {{ (item.uid && meetingUsers.find(f => f.agoraId === item.uid).userRealName) || userSelfDetail.userRealName }}
         </li>
       </ul>
     </div>
@@ -841,6 +841,18 @@ export default {
         }
       }
     },
+    toggleCameraTest() {
+      this.toggle = !this.toggle;
+      if (this.toggle) {
+        this.$refs.ar.getAgoraRtc().createCameraVideoTrack({
+          facingMode: 'environment'
+        });
+      } else {
+        this.$refs.ar.getAgoraRtc().createCameraVideoTrack({
+          facingMode: 'user'
+        });
+      }
+    },
     stopMediaTracks(stream) {
       stream.getTracks().forEach(track => {
         track.stop();
@@ -1163,6 +1175,7 @@ $main_color: #099dfd;
   flex-wrap: nowrap;
   animation:text 30s infinite  linear;
   .user-vision {
+    // width: 100%;
     flex-shrink: 0;
   }
 }
