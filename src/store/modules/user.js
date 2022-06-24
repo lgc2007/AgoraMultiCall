@@ -52,7 +52,6 @@ const mutations = {
     });
   },
   UPDATE_USER_LIST(state, params) {
-    console.log(params);
     params.map(m => {
       const index = state.meetingUsers.findIndex(item => String(item.agoraId) === String(m.userId));
       const obj = state.meetingUsers.find(item => String(item.agoraId) === String(m.userId));
@@ -175,9 +174,8 @@ const actions = {
       meetingDetail(state.meetingPage.id)
         .then(({ obj }) => {
           if (obj) {
-            const userDetail = obj.meetingUsers.filter(item => item.agoraId === state.agoraId)[0];
+            const userDetail = obj.meetingUsers.find(item => item.agoraId === state.agoraId);
             commit('setState', {
-              meetingDetail: obj,
               userDetail,
               meetingUsers: obj.meetingUsers,
             });

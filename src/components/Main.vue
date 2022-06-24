@@ -8,12 +8,7 @@
     <agora
       ref="mainref"
       channel="channel"
-      :auto-start="false"
-      :error-handler="
-        error => {
-          this.$toast.fail(error.message || error);
-        }
-      "
+      :auto-start="true"
       @rtc-loaded="handleUserLoaded"
     >
       <agora-video-sender
@@ -99,9 +94,9 @@ export default {
   data() {
     return {
       localVideoDirective: null,
-      mute: true,
+      mute: false,
       level: 0,
-      cameraOff: true
+      cameraOff: false
     };
   },
   computed: {

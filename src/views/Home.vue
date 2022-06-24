@@ -34,9 +34,9 @@ export default {
     return {
       isJoinMeeting: false,
       config: null,
-      appid: '743decdce87c47be9758498fb9829774' || localStorage.getItem('appid') || '',
-      channel: 'm770ul2o4' || sessionStorage.getItem('channel') || '',
-      token: '006743decdce87c47be9758498fb9829774IABNcTbdqOHFWohUXwgm0pu3ojBeR+Qiw+7htYj3rgaZZG8hbwmXiKC3IgAh7MxZagSkYgQAAQBqBKRiAgBqBKRiAwBqBKRiBABqBKRi',
+      appid: '743decdce87c47be9758498fb9829774',
+      channel: '',
+      token: '',
     };
   },
   computed: {
@@ -51,52 +51,53 @@ export default {
     },
   },
   watch: {
-    appid: {
-      immediate: true,
-      handler(newV) {
-        if (!newV || newV === 'null' || newV === undefined) {
-          const appid = window.prompt('Input your appid:');
-          if (appid) {
-            localStorage.setItem('appid', appid);
-            this.appid = appid;
-          } else {
-            window.location.reload();
-          }
-        }
-      }
-    },
-    channel: {
-      immediate: true,
-      handler(newV) {
-        if (!newV || newV === 'null' || newV === undefined) {
-          const channel = window.prompt('Input your room channel:');
-          console.log(channel);
-          if (channel) {
-            sessionStorage.setItem('channel', channel);
-            this.channel = channel;
-          } else {
-            window.location.reload();
-          }
-        }
-      }
-    },
-    token: {
-      immediate: true,
-      handler(newV) {
-        if (!newV && newV !== null) {
-          const token = window.prompt('Input your token:');
-          if (token) {
-            localStorage.setItem('token', token);
-            this.token = token === 'null' ? null : token === null ? undefined : token;
-          } else {
-            window.location.reload();
-          }
-        }
-      }
-    }
+    // appid: {
+    //   immediate: true,
+    //   handler(newV) {
+    //     if (!newV || newV === 'null' || newV === undefined) {
+    //       const appid = window.prompt('Input your appid:');
+    //       if (appid) {
+    //         localStorage.setItem('appid', appid);
+    //         this.appid = appid;
+    //       } else {
+    //         window.location.reload();
+    //       }
+    //     }
+    //   }
+    // },
+    // channel: {
+    //   immediate: true,
+    //   handler(newV) {
+    //     if (!newV || newV === 'null' || newV === undefined) {
+    //       const channel = window.prompt('Input your room channel:');
+    //       console.log(channel);
+    //       if (channel) {
+    //         sessionStorage.setItem('channel', channel);
+    //         this.channel = channel;
+    //       } else {
+    //         window.location.reload();
+    //       }
+    //     }
+    //   }
+    // },
+    // token: {
+    //   immediate: true,
+    //   handler(newV) {
+    //     if (!newV && newV !== null) {
+    //       const token = window.prompt('Input your token:');
+    //       if (token) {
+    //         localStorage.setItem('token', token);
+    //         this.token = token === 'null' ? null : token === null ? undefined : token;
+    //       } else {
+    //         window.location.reload();
+    //       }
+    //     }
+    //   }
+    // }
   },
   methods: {
     handleJoinMeeting(config) {
+      console.log('cccccccc', config);
       this.isJoinMeeting = true;
       this.config = config;
       this.$nextTick(() => {

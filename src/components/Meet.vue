@@ -4,14 +4,13 @@
       <agora
         ref="ar"
         :log-level="2"
-        :channel="channel"
+        :channel="channelName"
         :appid="appid"
         :token="token"
         :uid="userId"
         :client-config="{ mode: 'live', role: 'host' }"
         :auto-start="true"
         :error-handler="handleError"
-        enable-dual-stream
         @rtc-loaded="handleUserLoaded"
         @crypt-error="cryptError"
         @user-joined="handleUserJoin"
@@ -21,7 +20,7 @@
         @join-failed="handleJoinFailed"
         @client-created="handleClientCreated"
         @stream-fallback="handleStreamFallback"
-        @unsubscribe="handleUnsubscribe"
+        @camera-changed="(info) => {console.log(`camera changed!`, info.state, info.device);}"
       >
         <agora-audio-sender
           ref="audioSender"
@@ -80,11 +79,12 @@
           </p>
         </div>
         <avatar-audio v-if="!onlineHost.videoState" />
-        />
       </div>
       <!-- 在线普通用户 -->
     </div>
-    <div class="player">
+    <div class="player online-wrap">
+      <!-- <van-swipe :loop="false" :width="300">
+        <van-swipe-item> -->
       <div
         v-for="online in meetingUsers.filter(f => (f.isOnline === 1) && (f.userType === 1))"
         :key="online.agoraId"
@@ -115,26 +115,18 @@
           </p>
         </div>
         <avatar-audio v-if="!online.videoState" />
-        <!-- <div class="central">
-          <pin-button
-            class="pin-button-local"
-            :pined="
-              pined && (user_id ? pinedUid === user_id : pinedUid === uid)
-            "
-            @click="handlePinUser(user_id || uid)"
-          />
-        </div> -->
       </div>
+      <!-- </van-swipe-item>
+      </van-swipe> -->
     </div>
     <div class="top-operate">
-      <div class="top-operate-left" @click="toggleCamera">
-        <!-- <van-icon name="exchange" /> -->
+      <!-- <div class="top-operate-left" @click="toggleCamera">
         <van-button v-for="(item,index) in dataList" :key="index" type="primary" @click="videoClick(item)">{{ item.count }}</van-button>
         <van-button icon="exchange" type="primary">切换</van-button>
-      </div>
-      <div class="top-operate-right" @click="handleCall">
+      </div> -->
+      <!-- <div class="top-operate-right" @click="handleCall">
         <van-button type="primary">加入</van-button>
-      </div>
+      </div> -->
       <div class="top-operate-right" @click="handleLeave">
         <van-button type="primary">离开</van-button>
       </div>
@@ -197,7 +189,7 @@
           <span>{{ userSelfDetail.isSpeech ? '结束发言' : '我要发言' }}</span>
         </div>
       </div>
-      <div v-if="userSelfDetail.isSpeech" class="tabbar-item" @click="audioSwitch">
+      <div v-if="userSelfDetail.userType === 0 || userSelfDetail.isSpeech" class="tabbar-item" @click="handleAudio">
         <div class="tabbar-item-icon">
           <svg-icon :icon-class="userSelfDetail.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
         </div>
@@ -207,12 +199,20 @@
       </div>
       <div class="tabbar-item" @click="handleCamera">
         <div class="tabbar-item-icon">
-          <svg-icon :icon-class="cameraIsClosed ? 'video_mute' : 'video'" class-name="video" />
+          <svg-icon :icon-class="userSelfDetail.videoState ? 'video' : 'video_mute'" class-name="video" />
         </div>
         <div class="tabbar-item-text">
           <span>视频</span>
         </div>
       </div>
+      <!-- <div class="tabbar-item" @click="audioTest">
+        <div class="tabbar-item-icon">
+          <svg-icon :icon-class="userSelfDetail.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
+        </div>
+        <div class="tabbar-item-text">
+          <span>测试</span>
+        </div>
+      </div> -->
       <div class="tabbar-item" @click="handleExpandUserList">
         <div class="tabbar-item-icon">
           <van-icon name="friends-o" />
@@ -254,7 +254,7 @@ import VoiceDot from './voice-dot/main';
 import AvatarAudio from './avatar-audio/main';
 import PinButton from './pin-button/main';
 import { meetingTurn, exit, speechSeatAttend, speechSeatExit } from '@/api/url';
-import { Tabbar, TabbarItem, Icon, Button, Dialog, } from 'vant';
+import { Tabbar, TabbarItem, Icon, Button, Dialog, Swipe, SwipeItem, } from 'vant';
 import RtmClient from '@/utils/rtm-client.js';
 
 export default {
@@ -272,12 +272,14 @@ export default {
     [Icon.name]: Icon,
     [Button.name]: Button,
     [Dialog.name]: Dialog,
+    [Swipe.name]: Swipe,
+    [SwipeItem.name]: SwipeItem,
   },
   props: {
-    channel: {
-      type: String,
-      default: null,
-    },
+    // channel: {
+    //   type: String,
+    //   default: null,
+    // },
     appid: {
       type: String,
       default: null,
@@ -334,6 +336,16 @@ export default {
     },
     userSelfDetail() {
       return this.$store.state.user.meetingUsers.find(item => item.agoraId === this.$store.state.user.agoraId);
+    },
+    isOff: {
+      get() {
+        return !(this.$store.state.user.meetingUsers.find(item => item.agoraId === this.$store.state.user.agoraId).audioState);
+      },
+      set(value) {
+        this.$store.commit('user/setState', {
+          audioState: value ? 0 : 1
+        });
+      }
     },
     userType() {
       return this.$store.state.user.userDetail.userType;
@@ -499,7 +511,8 @@ export default {
       return str;
     },
     handleUserLoaded() {
-      this.$refs.ar.getAgoraRtc().setLogLevel(2);
+      // 隐藏消息
+      // this.$refs.ar.getAgoraRtc().setLogLevel(2);
       // SDK加载完成，此时可以读取 AgoraRTC 对象, 在此之前调用 getAgoraRTC 是拿不到 AgoraRTC 对象的。
       console.log('SDK加载完成:');
     },
@@ -521,6 +534,7 @@ export default {
         speechSeatExit({
           id: this.meetingPage.id,
         }).then(({ obj }) => {
+          // this.mute = true;
           // this.mute = !this.mute;
         });
       } else {
@@ -533,7 +547,11 @@ export default {
             speechSeatAttend({
               id: this.meetingPage.id,
             }).then(({ obj }) => {
-              this.mute = !this.mute;
+              // this.mute = false;
+              // const audioSender = this.$refs.audioSender;
+              // const track = audioSender.getTrack();
+              // this.$refs.audioSender.start(true);
+              // this.mute = !this.mute;
             });
           })
           .catch(() => {
@@ -541,15 +559,28 @@ export default {
           });
       }
     },
-    audioSwitch() {
+    handleAudio() {
       this.$toast(`麦克风 ${this.userSelfDetail.audioState ? '关' : '开'}`);
       meetingTurn({
         id: this.meetingPage.id,
-        'agoraType': 'AUDIO', // 音频AUDIO，视频VIDEO
-        'state': this.userSelfDetail.audioState ? 0 : 1		// 0关闭，1开启
+        agoraType: 'AUDIO', // 音频AUDIO，视频VIDEO
+        // state: this.mute ? 1 : 0		// 0关闭，1开启
+        state: this.userSelfDetail.audioState ? 0 : 1		// 0关闭，1开启
       }).then(({ obj }) => {
-        console.log(obj);
+        // this.$refs.audioSender.start(true);
+        // console.log(obj);
+        // this.mute = !obj;
+        // console.log(track.isPlaying);
+        // this.mute = this.userSelfDetail.audioState;
       });
+      // this.mute = !this.mute;
+      // this.isOff = !this.isOff;
+    },
+    audioTest() {
+      // const audioSender = this.$refs.videoSender;
+      // const track = audioSender.getTrack();
+      // audioSender.start(true);
+      // audioSender.setEnable(true);
     },
     playLocalVideoOnTopBanner() {
       const videoTrack = this.$refs.videoSender
@@ -620,15 +651,15 @@ export default {
       });
     },
     handleCamera(val) { // 开关摄像头
+      this.$toast(`相机 ${this.userSelfDetail.videoState ? '关' : '开'}`);
       meetingTurn({
         id: this.meetingPage.id,
         agoraType: 'VIDEO', // 音频AUDIO，视频VIDEO
-        state: this.cameraIsClosed ? 1 : 0		// 0关闭，1开启
+        state: this.userSelfDetail.videoState ? 0 : 1		// 0关闭，1开启
       }).then(({ obj }) => {
-        console.log(obj);
+        // console.log(obj);
       });
-      this.cameraIsClosed = !this.cameraIsClosed;
-      this.$toast(`相机 ${this.cameraIsClosed ? '关' : '开'}`);
+      // this.cameraIsClosed = !this.cameraIsClosed;
     },
     handleUserJoin(user) {
       // 远端用户或主播加入频道的事件
@@ -697,6 +728,7 @@ export default {
       this.remoteDirectiveList = remoteUserList;
     },
     handleAudioTrackCreated() {
+      console.log('音频创建完成的事件。');
       // 音频创建完成的事件。
       let id;
       const audioSender = this.$refs.audioSender;
@@ -786,7 +818,7 @@ export default {
       });
     },
     handleUnsubscribe(uid, type) {
-      this.$refs.ar.unsubscribe('673991659', 'video');
+      // this.$refs.ar.unsubscribe('673991659', 'video');
     },
     toggleCamera() {
       this.getdatalist();
@@ -920,9 +952,18 @@ export default {
               this.$store.dispatch('user/UPDATE_MEETING', [...(rotate.map((item, index) => {
                 return { ...item, isSpeech: 0 };
               })), { isSpeech: 1, audioState: reason.audioState, userId: reason.userId, videoState: reason.videoState }]);
+              if (String(reason.userId) === String(this.userId)) {
+                // 开启音频
+                this.mute = false;
+                this.$refs.audioSender.start(true);
+              }
               break;
             case 'EXIT_SPEECHSEAT':
               this.$store.dispatch('user/UPDATE_MEETING', [...rotate, { isSpeech: 0, audioState: reason.audioState, userId: reason.userId, videoState: reason.videoState }]);
+              if (String(reason.userId) === String(this.userId)) {
+                // 开启音频
+                this.mute = true;
+              }
               break;
             default:
               break;
@@ -937,7 +978,7 @@ export default {
               break;
             case 'TURN_OFF_VIDEO':
               if (String(userId) === String(this.userId) && !this.localDirective) {
-                // 打开本地视频
+                // 关闭本地视频
                 this.cameraIsClosed = true;
               }
               this.$store.dispatch('user/UPDATE_MEETING', [{ userId, videoState: 0 }]);
@@ -946,13 +987,23 @@ export default {
               if (String(userId) === String(this.userId) && !this.localDirective) {
                 // 打开本地视频
                 this.cameraIsClosed = false;
+                this.$refs.videoSender.start(true);
               }
               this.$store.dispatch('user/UPDATE_MEETING', [{ userId, videoState: 1 }]);
               break;
             case 'TURN_OFF_AUDIO':
+              if (String(userId) === String(this.userId)) {
+                // 关闭音频
+                this.mute = true;
+              }
               this.$store.dispatch('user/UPDATE_MEETING', [{ userId, audioState: 0 }]);
               break;
             case 'TURN_ON_AUDIO':
+              if (String(userId) === String(this.userId)) {
+                // 打开本地音频
+                this.mute = false;
+                this.$refs.audioSender.start(true);
+              }
               this.$store.dispatch('user/UPDATE_MEETING', [{ userId, audioState: 1 }]);
               break;
             case 'TURN_OFF_ALL_VIDEO':
@@ -1076,7 +1127,9 @@ $main_color: #099dfd;
       color: $main_color;
       // background-color: rgba(238, 238, 238, 0.6);
       padding: 2px 0 2px 10px;
-
+      .svg-icon {
+            flex-shrink: 0;
+      }
       &:hover {
         // background-color: #eee;
       }
@@ -1104,6 +1157,13 @@ $main_color: #099dfd;
   }
   .isSpeech {
     order: -1;
+  }
+}
+.online-wrap {
+  flex-wrap: nowrap;
+  animation:text 30s infinite  linear;
+  .user-vision {
+    flex-shrink: 0;
   }
 }
 .user-list {
