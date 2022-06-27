@@ -1,3 +1,11 @@
+<!--
+ * @Description: 
+ * @Version: 2.0
+ * @Autor: lgc
+ * @Date: 2022-05-27 11:03:33
+ * @LastEditors: lgc
+ * @LastEditTime: 2022-06-27 16:06:43
+-->
 <!DOCTYPE html>
 <html lang="">
   <head>
@@ -14,4 +22,12 @@
     <div id="app"></div>
     <!-- built files will be auto injected -->
   </body>
+  <script>
+    (function () {
+    var src = '//cdn.jsdelivr.net/npm/eruda';
+    if (!/eruda=true/.test(window.location) && localStorage.getItem('active-eruda') != 'true') return;
+    document.write('<scr' + 'ipt src="' + src + '"></scr' + 'ipt>');
+    document.write('<scr' + 'ipt>eruda.init();</scr' + 'ipt>');
+})();
+  </script>
 </html>

@@ -327,7 +327,7 @@ export default {
       },
       currentStream: undefined,
       dataList: [],
-      toggle: true,
+      toggle: 0,
     };
   },
   computed: {
@@ -577,9 +577,9 @@ export default {
       // this.isOff = !this.isOff;
     },
     audioTest() {
-      const audioSender = this.$refs.audioSender;
+      // const audioSender = this.$refs.audioSender;
       // const track = audioSender.getTrack();
-      audioSender.start(true);
+      // audioSender.start(true);
       // audioSender.setEnable(true);
     },
     playLocalVideoOnTopBanner() {
@@ -841,17 +841,28 @@ export default {
         }
       }
     },
-    toggleCameraTest() {
-      this.toggle = !this.toggle;
-      if (this.toggle) {
-        this.$refs.ar.getAgoraRtc().createCameraVideoTrack({
-          facingMode: 'environment'
-        });
+    async toggleCameraTest() {
+      const cameraList = await this.$refs.ar.getAgoraRtc().getCameras(true);
+      const track = this.$refs.videoSender.getTrack();
+      console.log(cameraList, track);
+      if (this.toggle < cameraList.length) {
+        track.setDevice(cameraList[this.toggle].deviceId);
+        this.toggle += 1;
       } else {
-        this.$refs.ar.getAgoraRtc().createCameraVideoTrack({
-          facingMode: 'user'
-        });
+        this.toggle = 0;
+        track.setDevice(cameraList[this.toggle].deviceId);
       }
+      // this.toggle = !this.toggle;
+
+      // if (this.toggle) {
+      //   this.$refs.ar.getAgoraRtc().createCameraVideoTrack({
+      //     facingMode: 'environment'
+      //   });
+      // } else {
+      //   this.$refs.ar.getAgoraRtc().createCameraVideoTrack({
+      //     facingMode: 'user'
+      //   });
+      // }
     },
     stopMediaTracks(stream) {
       stream.getTracks().forEach(track => {
@@ -1056,6 +1067,9 @@ video.agora_video_player
 
 </style>
 <style lang="scss" scoped>
+.meet {
+  padding-top: 50px;
+}
 $main_color: #099dfd;
 // @import "@/styles/meet/player.scss";
 .microphone {
