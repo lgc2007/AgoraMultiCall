@@ -61,7 +61,7 @@
     <div class="player player-host">
       <!-- 主持人 -->
       <div
-        v-for="onlineHost in meetingUsers.filter(f => (f.isOnline === 1) && (f.userType === 0)) || []"
+        v-for="onlineHost in meetingUsers.filter(f => (f.isOnline === 1) && (f.specialFlag === 1)) || []"
         :key="onlineHost.agoraId"
         class="user-vision online-host"
       >
@@ -86,12 +86,12 @@
       <!-- <van-swipe :show-indicators="false" :loop="true" width="50%" autoplay="3000">
         <van-swipe-item> -->
       <div
-        v-for="online in meetingUsers.filter(f => (f.isOnline === 1) && (f.userType === 1))"
+        v-for="online in meetingUsers.filter(f => (f.isOnline === 1) && (f.specialFlag === 0))"
         :key="online.agoraId"
         class="user-vision"
         :class="{
           isSpeech: !!meetingUsers.find(e => {return e.agoraId === online.agoraId}).isSpeech,
-          isHost: !meetingUsers.find(e => {return e.agoraId === online.agoraId}).userType,
+          isHost: meetingUsers.find(e => {return e.agoraId === online.agoraId}).specialFlag,
           'screen-share-vision': online.agoraId === shareScreenUID,
           'screen-share-vision-pined':
             online.agoraId === shareScreenUID && online.agoraId === pinedUid
@@ -181,7 +181,7 @@
       </ul>
     </div>
     <div class="tabbar">
-      <div v-if="userSelfDetail.userType" class="tabbar-item" @click="handleSpeech">
+      <div v-if="!userSelfDetail.specialFlag" class="tabbar-item" @click="handleSpeech">
         <div class="tabbar-item-icon">
           <svg-icon icon-class="pin_img" class-name="microphone" />
         </div>
@@ -189,7 +189,7 @@
           <span>{{ userSelfDetail.isSpeech ? '结束发言' : '我要发言' }}</span>
         </div>
       </div>
-      <div v-if="userSelfDetail.userType === 0 || userSelfDetail.isSpeech" class="tabbar-item" @click="handleAudio">
+      <div v-if="userSelfDetail.specialFlag === 1 || userSelfDetail.isSpeech" class="tabbar-item" @click="handleAudio">
         <div class="tabbar-item-icon">
           <svg-icon :icon-class="userSelfDetail.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
         </div>
@@ -347,8 +347,8 @@ export default {
         });
       }
     },
-    userType() {
-      return this.$store.state.user.userDetail.userType;
+    specialFlag() {
+      return this.$store.state.user.userDetail.specialFlag;
     },
     meetingUsers() {
       // 会议人员
@@ -577,9 +577,9 @@ export default {
       // this.isOff = !this.isOff;
     },
     audioTest() {
-      // const audioSender = this.$refs.videoSender;
+      const audioSender = this.$refs.audioSender;
       // const track = audioSender.getTrack();
-      // audioSender.start(true);
+      audioSender.start(true);
       // audioSender.setEnable(true);
     },
     playLocalVideoOnTopBanner() {
@@ -1018,6 +1018,21 @@ export default {
               }
               this.$store.dispatch('user/UPDATE_MEETING', [{ userId, audioState: 1 }]);
               break;
+            case 'ATTEND_SPEECHSEAT':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ isSpeech: 1, audioState: action.audioState, userId: action.userId, videoState: action.videoState }]);
+              if (String(action.userId) === String(this.userId)) {
+                // 开启音频
+                this.mute = false;
+                this.$refs.audioSender.start(true);
+              }
+              break;
+            case 'EXIT_SPEECHSEAT':
+              this.$store.dispatch('user/UPDATE_MEETING', [{ isSpeech: 0, audioState: action.audioState, userId: action.userId, videoState: action.videoState }]);
+              if (String(action.userId) === String(this.userId)) {
+                // 开启音频
+                this.mute = true;
+              }
+              break;
             case 'TURN_OFF_ALL_VIDEO':
               this.$store.commit('user/TURN_OFF_ALL_VIDEO');
               break;
@@ -1174,6 +1189,7 @@ $main_color: #099dfd;
 .online-wrap {
   flex-wrap: nowrap;
   animation:text 30s infinite  linear;
+  margin-top: 20px;
   .user-vision {
     // width: 100%;
     flex-shrink: 0;

@@ -46,7 +46,7 @@ const mutations = {
   //       };
   TURN_OFF_ALL_VIDEO(state, params) {
     state.meetingUsers.map((item, index) => {
-      if (item.userType) {
+      if (!item.specialFlag) {
         Vue.set(item, 'videoState', 0);
       }
     });

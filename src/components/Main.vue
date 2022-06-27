@@ -2,7 +2,7 @@
   <div class="main">
     <div class="banner">
       <div class="logo">
-        多人会议
+        一键直连Demo
       </div>
     </div>
     <agora
@@ -387,7 +387,93 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-@import "../styles/main/index.styl"
+// @import "../styles/main/index.styl"
+$bgc_color=#fff
+$main_color=#099dfd
+.main{
+  width: 100vw
+  height 100vh
+  position: relative;
+  .banner{
+    display flex
+    justify-content center
+    align-items center
+    width: 100%
+    height: 100px
+    background-color: $bgc_color;
+    .logo{
+      position: relative;
+      color: $main_color
+      font-size: 2em;
+      padding 0 0.5em 0 0em
+      height 3em
+      line-height: 3em;
+      &:after{
+        display block
+        position: absolute;
+        left: 0.4em;
+        top: 50%;
+        content ""
+        transform translateY(-50%)
+        width: 1.6em
+        height: 1.6em
+        // background center / contain  no-repeat url("~@/assets/logo.png")
+      }
+    }
+  }
+
+  .operation{
+    position: absolute;
+    right: 10vw
+    top: 36vh
+    width: 24vw
+    height: 20vh
+    color: #000;
+    display flex
+    flex-direction column
+    justify-content space-around
+    align-items center
+    p{
+      text-align center
+      &.question{
+        font-size: 1.4em;
+      }
+      &.tip{
+        margin 10px 0 30px 0
+      }
+    }
+
+  }
+
+  .footer{
+    position absolute;
+    bottom: 10px
+    left: 50%
+    font-size 0.8em
+    transform translateX(-50%)
+    width: 100%
+    display flex
+    justify-content space-around
+    align-items center
+    flex-direction column
+    text-align center
+    color $main_color;
+    padding: 10px
+    line-height 2em
+    &:before{
+      content ""
+      display block
+      width: 100%
+      height: 1px
+      transform scaleY(0.5)
+      background-color: $main_color;
+      position absolute
+      top: 0
+      left: 0
+      right: 0
+    }
+  }
+}
 </style>
 <style lang="scss" scoped>
 $bgc_color:#fff;
