@@ -8,7 +8,7 @@
     <agora
       ref="mainref"
       channel="channel"
-      :auto-start="true"
+      :auto-start="false"
       @rtc-loaded="handleUserLoaded"
     >
       <agora-video-sender
@@ -253,7 +253,7 @@ export default {
 
     async joinRtm() {
       const rtm = new RtmClient();
-      rtm.init(this.appid);
+      rtm.init('743decdce87c47be9758498fb9829774');
       window.rtm = rtm;
       await rtm.login(String(this.userId), this.rtmToken).then(() => {
         console.log('登陆成功');

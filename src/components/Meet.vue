@@ -82,13 +82,12 @@
       </div>
       <!-- 在线普通用户 -->
     </div>
-    <div class="player online-wrap">
-      <!-- <van-swipe :show-indicators="false" :loop="true" width="50%" autoplay="3000">
-        <van-swipe-item> -->
+    <div class="online-wrap">
+      <!-- 发言席 -->
       <div
-        v-for="online in meetingUsers.filter(f => (f.isOnline === 1) && (f.specialFlag === 0))"
+        v-for="online in speechList"
         :key="online.agoraId"
-        class="user-vision"
+        class="user-vision is-speech"
         :class="{
           isSpeech: !!meetingUsers.find(e => {return e.agoraId === online.agoraId}).isSpeech,
           isHost: meetingUsers.find(e => {return e.agoraId === online.agoraId}).specialFlag,
@@ -104,10 +103,6 @@
           class="player-vision"
         ></div>
         <div class="ban">
-          <!-- <pin-button
-            v-if="pined && online.agoraId === pinedUid"
-            :could-hover="false"
-          /> -->
           <svg-icon :icon-class="online.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
           <p>
             {{ renderUser(online.agoraId) || "you"
@@ -116,22 +111,60 @@
         </div>
         <avatar-audio v-if="!online.videoState" />
       </div>
-      <!-- </van-swipe-item>
-      </van-swipe> -->
-    </div>
-    <div class="top-operate">
-      <div class="top-operate-left" @click="toggleCameraTest">
-        <!-- <van-button v-for="(item,index) in dataList" :key="index" type="primary" @click="videoClick(item)">{{ item.count }}</van-button> -->
-        <van-button icon="exchange" type="info">切换</van-button>
-      </div>
-      <!-- <div class="top-operate-right" @click="handleCall">
+      <!-- 轮播用户 -->
+      <swiper v-if="rotateList.length" :key="swiperKey" :options="swiperOption" class="mySwiper swiper">
+        <!-- <div class="swiper-container"> -->
+        <swiper-slide v-for="online in rotateList" :key="online.id" class="aaaaa">
+          <div
+            ref="cur"
+            class="swiper-wrapper user-vision"
+            :class="{
+              isSpeech: !!meetingUsers.find(e => {return e.agoraId === online.agoraId}).isSpeech,
+              isHost: meetingUsers.find(e => {return e.agoraId === online.agoraId}).specialFlag,
+              'screen-share-vision': online.agoraId === shareScreenUID,
+              'screen-share-vision-pined':
+                online.agoraId === shareScreenUID && online.agoraId === pinedUid
+            }"
+          >
+            <div
+              v-if="playList.find(e => e.uid === online.agoraId) && online.videoState"
+              v-show="!streamFallbackList.includes(online.agoraId)"
+              v-player="playList.find(e => e.uid === online.agoraId)"
+              class="player-vision"
+            ></div>
+            <div class="ban">
+              <svg-icon :icon-class="online.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
+              <p>
+                {{ renderUser(online.agoraId) || "you"
+                }}<span v-if="online.agoraId === uid && inMeeting"> (你) </span>
+              </p>
+            </div>
+            <avatar-audio v-if="!online.videoState" />
+          </div>
+          <!-- <div slot="pagination" class="swiper-pagination"></div> -->
+          <!-- <van-swipe :show-indicators="false" :loop="true" width="50%" autoplay="3000"> -->
+          <!-- <van-swipe-item
+          v-for="online in meetingUsers.filter(f => (f.isOnline === 1) && (f.specialFlag === 0) && (f.isSpeech === 0))"
+          :key="online.agoraId"
+        > -->
+        </swiper-slide>
+      </swiper>
+      <!-- </van-swipe-item> -->
+      <!-- </van-swipe> -->
+      <!-- </div> -->
+      <div class="top-operate">
+        <div class="top-operate-left" @click="toggleCameraTest">
+          <!-- <van-button v-for="(item,index) in dataList" :key="index" type="primary" @click="videoClick(item)">{{ item.count }}</van-button> -->
+          <van-button icon="exchange" type="info">切换</van-button>
+        </div>
+        <!-- <div class="top-operate-right" @click="handleCall">
         <van-button type="primary">加入</van-button>
       </div> -->
-      <div class="top-operate-right" @click="handleLeave">
-        <van-button type="info">离开</van-button>
+        <div class="top-operate-right" @click="handleLeave">
+          <van-button type="info">离开</van-button>
+        </div>
       </div>
-    </div>
-    <!-- <div class="notify">
+      <!-- <div class="notify">
       <div class="remote-user" @click="handleExpandUserList">
         用户: {{ users.length }}
       </div>
@@ -152,60 +185,82 @@
         </div>
       </div>
     </div> -->
-    <div v-show="showExpandUserList" class="user-list">
-      <p @click="handleCustom">参加会议的所有用户 :</p>
-      <ul>
-        <li v-for="(item, index) in users" :key="index">
-          <voice-dot
-            class="audio-dot-local"
-            :level="
-              audioStatusObj[item.uid || uid] &&
-                audioStatusObj[item.uid || uid].level
-                ? audioStatusObj[item.uid || uid].level
-                : 0
-            "
-            :mute="
-              audioStatusObj[item.uid || uid] &&
-                audioStatusObj[item.uid || uid].mute !== false
-            "
-          />
-          <!-- <pin-button
+      <div v-show="showExpandUserList" class="user-list">
+        <p @click="handleCustom">参加会议的所有用户 :</p>
+        <ul>
+          <li v-for="(item, index) in users" :key="index">
+            <voice-dot
+              class="audio-dot-local"
+              :level="
+                audioStatusObj[item.uid || uid] &&
+                  audioStatusObj[item.uid || uid].level
+                  ? audioStatusObj[item.uid || uid].level
+                  : 0
+              "
+              :mute="
+                audioStatusObj[item.uid || uid] &&
+                  audioStatusObj[item.uid || uid].mute !== false
+              "
+            />
+            <!-- <pin-button
             class="pin-button-local"
             :pined="
               pined && (item.uid ? pinedUid === item.uid : pinedUid === uid)
             "
             @click="handlePinUser(item.uid || uid)"
           /> -->
-          {{ (item.uid && meetingUsers.find(f => f.agoraId === item.uid).userRealName) || userSelfDetail.userRealName }}
-        </li>
-      </ul>
-    </div>
-    <div class="tabbar">
-      <div v-if="!userSelfDetail.specialFlag" class="tabbar-item" @click="handleSpeech">
-        <div class="tabbar-item-icon">
-          <svg-icon icon-class="pin_img" class-name="microphone" />
-        </div>
-        <div class="tabbar-item-text">
-          <span>{{ userSelfDetail.isSpeech ? '结束发言' : '我要发言' }}</span>
-        </div>
+            {{ (item.uid && meetingUsers.find(f => f.agoraId === item.uid).userRealName) || userSelfDetail.userRealName }}
+          </li>
+        </ul>
       </div>
-      <div v-if="userSelfDetail.specialFlag === 1 || userSelfDetail.isSpeech" class="tabbar-item" @click="handleAudio">
-        <div class="tabbar-item-icon">
-          <svg-icon :icon-class="userSelfDetail.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
+      <van-popup v-model="popupShow" :style="{ width: '60%', height: '100%' }" position="left">
+        <div class="user-title">参会人员( {{ meetingUsers.filter(z => z.isOnline === 1).length }} / {{ meetingUsers.length }} )</div>
+        <van-search
+          v-model="searchValue"
+          show-action
+          placeholder="请输入搜索关键词"
+          @search="onSearch"
+          @cancel="onCancel"
+        />
+        <div class="search-list">
+          <div v-for="item in meetingUsers.filter(s => s.userRealName.includes(searchValue))" :key="item.userId" class="search-item" :class="{searchOnLine: item.isOnline}">
+            <div class="item-left">
+              <svg-icon icon-class="yonghu" class-name="yonghu" />
+              {{ item.userRealName }}
+            </div>
+            <div class="item-right">
+              <svg-icon :icon-class="item.videoState ? 'shipin' : 'shipin_off'" class-name="video" />
+              <svg-icon :icon-class="(item.audioState || !item.isOnline) ? 'audio' : 'audio_off'" class-name="microphone" />
+            </div>
+          </div>
         </div>
-        <div class="tabbar-item-text">
-          <span>语音</span>
+      </van-popup>
+      <div class="tabbar">
+        <div v-if="!userSelfDetail.specialFlag" class="tabbar-item" @click="handleSpeech">
+          <div class="tabbar-item-icon">
+            <svg-icon icon-class="pin_img" class-name="microphone" />
+          </div>
+          <div class="tabbar-item-text">
+            <span>{{ userSelfDetail.isSpeech ? '结束发言' : '我要发言' }}</span>
+          </div>
         </div>
-      </div>
-      <div class="tabbar-item" @click="handleCamera">
-        <div class="tabbar-item-icon">
-          <svg-icon :icon-class="userSelfDetail.videoState ? 'video' : 'video_mute'" class-name="video" />
+        <div v-if="userSelfDetail.specialFlag === 1 || userSelfDetail.isSpeech" class="tabbar-item" @click="handleAudio">
+          <div class="tabbar-item-icon">
+            <svg-icon :icon-class="userSelfDetail.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
+          </div>
+          <div class="tabbar-item-text">
+            <span>语音</span>
+          </div>
         </div>
-        <div class="tabbar-item-text">
-          <span>视频</span>
+        <div class="tabbar-item" @click="handleCamera">
+          <div class="tabbar-item-icon">
+            <svg-icon :icon-class="userSelfDetail.videoState ? 'video' : 'video_mute'" class-name="video" />
+          </div>
+          <div class="tabbar-item-text">
+            <span>视频</span>
+          </div>
         </div>
-      </div>
-      <!-- <div class="tabbar-item" @click="audioTest">
+        <!-- <div class="tabbar-item" @click="audioTest">
         <div class="tabbar-item-icon">
           <svg-icon :icon-class="userSelfDetail.audioState ? 'microphone' : 'microphone_mute'" class-name="microphone" />
         </div>
@@ -213,15 +268,15 @@
           <span>测试</span>
         </div>
       </div> -->
-      <div class="tabbar-item" @click="handleExpandUserList">
-        <div class="tabbar-item-icon">
-          <van-icon name="friends-o" />
-        </div>
-        <div class="tabbar-item-text">
-          <span>用户</span>
+        <div class="tabbar-item" @click="handleExpandUserList">
+          <div class="tabbar-item-icon">
+            <van-icon name="friends-o" />
+          </div>
+          <div class="tabbar-item-text">
+            <span>用户</span>
+          </div>
         </div>
       </div>
-    </div>
     <!-- <div class="banner">
       <div class="test-button" @click="handleOpenNewPage">
         （测试）打开新页面
@@ -242,6 +297,7 @@
         }}
       </div>
     </div> -->
+    </div>
   </div>
 </template>
 
@@ -254,8 +310,16 @@ import VoiceDot from './voice-dot/main';
 import AvatarAudio from './avatar-audio/main';
 import PinButton from './pin-button/main';
 import { meetingTurn, exit, speechSeatAttend, speechSeatExit } from '@/api/url';
-import { Tabbar, TabbarItem, Icon, Button, Dialog, Swipe, SwipeItem, } from 'vant';
+import { Tabbar, TabbarItem, Icon, Button, Dialog, Swipe, SwipeItem, Popup, Search, } from 'vant';
 import RtmClient from '@/utils/rtm-client.js';
+// import { swiper, swiperSlide } from 'vue-awesome-swiper';
+// import 'swiper/dist/css/swiper.css';
+// import { Swiper, SwiperSlide } from 'swiper/vue/swiper-vue';
+// import Swiper from 'swiper';
+// import 'swiper/css/swiper.min.css';
+// import 'swiper/swiper.min.css';
+import { Swiper, SwiperSlide } from 'vue-awesome-swiper';
+import 'swiper/css/swiper.css';
 
 export default {
   name: 'Meet',
@@ -274,16 +338,16 @@ export default {
     [Dialog.name]: Dialog,
     [Swipe.name]: Swipe,
     [SwipeItem.name]: SwipeItem,
+    [Popup.name]: Popup,
+    [Search.name]: Search,
+    Swiper,
+    SwiperSlide,
   },
   props: {
     // channel: {
     //   type: String,
     //   default: null,
     // },
-    appid: {
-      type: String,
-      default: null,
-    },
     token: {
       type: String,
       default: null,
@@ -299,6 +363,7 @@ export default {
   },
   data() {
     return {
+      appid: '743decdce87c47be9758498fb9829774',
       mute: false, // 是否开启静音 (即本地音频收集和播放(如果开启了monitor),并停止向远端发送音频流)
       handleError: error => {
         this.$toast.fail(error.message || error);
@@ -328,9 +393,37 @@ export default {
       currentStream: undefined,
       dataList: [],
       toggle: 0,
+      swiperOption: {
+        slidesPerView: 2,
+        loop: true,
+        // autoplay: {
+        //   delay: 3000,
+        //   stopOnLastSlide: false,
+        //   disableOnInteraction: false
+        // },
+        // 显示分页
+        // pagination: {
+        //   el: '.swiper-pagination',
+        //   clickable: true // 允许分页点击跳转
+        // },
+        // 设置点击箭头
+        navigation: {
+          // nextEl: '.swiper-button-next',
+          // prevEl: '.swiper-button-prev'
+        }
+      },
+      popupShow: false,
+      searchValue: '',
+      swiperKey: Math.random().toString(36).substr(2),
     };
   },
   computed: {
+    speechList() {
+      return this.$store.state.user.meetingUsers.filter(f => (f.isOnline === 1) && (f.specialFlag === 0) && (f.isSpeech === 1));
+    },
+    rotateList() {
+      return this.$store.state.user.meetingUsers.filter(f => (f.isOnline === 1) && (f.specialFlag === 0) && (f.isSpeech === 0));
+    },
     userId() {
       return this.$store.state.user.userId;
     },
@@ -363,9 +456,6 @@ export default {
     },
     channelName() {
       return this.$store.state.user.channelName;
-    },
-    rtcToken() {
-      return this.$store.state.user.rtcToken;
     },
     encryptSalt() {
       return this.$store.state.user.encryptSalt;
@@ -454,13 +544,29 @@ export default {
         !this.youAreShareScreening &&
         this.unpinedUserIdList.includes(this.shareScreenUID)
       );
-    }
+    },
   },
   watch: {
     cameraIsClosed(newV) {
       if (!newV && this.$refs.videoSender && this.$refs.localCameraPlayer) {
         this.playLocalVideoOnTopBanner();
       }
+    },
+    speechList(newV) {
+      if (newV.length === 0) {
+        this.swiperOption.slidesPerView = 2;
+      } else {
+        this.swiperOption.slidesPerView = 1;
+      }
+      this.$nextTick(() => {
+        this.swiperKey = Math.random().toString(36).substr(2);// 修改key，swiper重新渲染。
+      });
+    },
+    rotateList: {
+      immediate: true,
+      handler() {
+
+      },
     }
   },
   created() {
@@ -468,9 +574,12 @@ export default {
     this.cameraIsClosed = this.preCameraOff;
   },
   mounted() {
-    console.log('ddddd', this.$refs.ar);
   },
   methods: {
+    onSearch(val) {
+    },
+    onCancel() {
+    },
     renderUser(userId) {
       const { userRealName } = this.meetingUsers.filter(item => item.agoraId === userId)[0];
       return userRealName;
@@ -699,7 +808,8 @@ export default {
       }
     },
     handleExpandUserList() {
-      this.showExpandUserList = !this.showExpandUserList;
+      this.popupShow = true;
+      // this.showExpandUserList = !this.showExpandUserList;
     },
     handleVideoReady(localVideo, info) {
       // 本地用户视频ready事件，本地视频流创建成功，可以在本地播放时触发该事件。
@@ -917,7 +1027,7 @@ export default {
     },
     async joinRtm() {
       const rtm = new RtmClient();
-      rtm.init(this.appid);
+      rtm.init('743decdce87c47be9758498fb9829774');
       window.rtm = rtm;
       await rtm.login(String(this.userId), this.rtmToken).then(() => {
         console.log('登陆成功');
@@ -1062,10 +1172,6 @@ export default {
 video.agora_video_player
   object-fit: contain !important
 </style>
-
-<style scoped lang="stylus">
-
-</style>
 <style lang="scss" scoped>
 .meet {
   padding-top: 50px;
@@ -1201,13 +1307,77 @@ $main_color: #099dfd;
   }
 }
 .online-wrap {
-  flex-wrap: nowrap;
+//  display: block;
+width: 100vw;
   animation:text 30s infinite  linear;
   margin-top: 20px;
-  .user-vision {
-    // width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  .is-speech {
+    width: 50vw;
     flex-shrink: 0;
   }
+  .user-vision {
+    // width: 50%;
+    height: 340px;
+    position: relative;
+    margin-bottom: 10px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    .player-vision  {
+      width: 100%;
+      height: 100%;
+    }
+    & .ban {
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      flex-direction: row;
+      cursor: pointer;
+      border-radius: 8px;
+      color: $main_color;
+      // background-color: rgba(238, 238, 238, 0.6);
+      padding: 2px 0 2px 10px;
+      .svg-icon {
+            flex-shrink: 0;
+      }
+      &:hover {
+        // background-color: #eee;
+      }
+      p {
+        position: relative;
+        margin: 4px 0;
+        padding: 4px 10px 4px 28px;
+        word-break: keep-all;
+        white-space: nowrap;
+
+      }
+    }
+  }
+  .van-swipe {
+    flex-grow: 1;
+    // max-width: 50vw;
+    // max-width: 100vw;
+  }
+  .van-swipe-item {
+    // max-width: 50vw;
+    // display: flex;
+  }
+  .user-vision {
+    // width: 50vw;
+  }
+}
+.swiper-container{
+  // width: 100vw;
+  // animation:text 30s infinite  linear;
+  // margin-top: 20px;
+  // display: flex;
+  // flex-wrap: nowrap;
 }
 .user-list {
   z-index: 10;
@@ -1266,6 +1436,58 @@ $main_color: #099dfd;
         top: 50%;
         transform: translateY(-50%);
       }
+    }
+  }
+}
+ .user-title {
+    text-align: center;
+    // font-weight: bold;
+    line-height: 16px;
+    font-size: 16px;
+    padding: 5px 10px;
+  }
+.search-list {
+  .search-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+        position: relative;
+        padding: 10px 16px;
+    &:after {
+      position: absolute;
+      box-sizing: border-box;
+      content: ' ';
+      pointer-events: none;
+      right: 16px;
+      bottom: 0;
+      left: 16px;
+      border-bottom: 1px solid #ebedf0;
+      transform: scaleY(0.5);
+    }
+    .item-right {
+      .svg-icon {
+        font-size: 16px;
+        color: #d9d9d9;
+      }
+      .microphone {
+        margin-left: 10px;
+      }
+    }
+  }
+  .searchOnLine {
+    .item-right {
+      .shipin, .audio {
+        color: #099dfd;
+      }
+      .shipin_off, .audio_off {
+        color: #000000;
+      }
+      // .svg-icon {
+      //   color: #999;
+      // }
+      // .microphone {
+      //   margin-left: 10px;
+      // }
     }
   }
 }

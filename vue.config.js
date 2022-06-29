@@ -4,7 +4,7 @@
  * @Autor: lgc
  * @Date: 2022-05-19 15:04:26
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-27 09:53:44
+ * @LastEditTime: 2022-06-27 18:00:39
  */
 'use strict';
 const path = require('path');
@@ -17,7 +17,7 @@ function resolve(dir) {
 
 const name = '测试demo'; // page title
 
-const port = process.env.port || process.env.npm_config_port || 9528; // dev port
+const port = process.env.port || process.env.npm_config_port || 9600; // dev port
 
 module.exports = {
   publicPath: './',
@@ -33,27 +33,27 @@ module.exports = {
       errors: true,
     },
     proxy: {
-      // '/': {
-      //   target: 'http://117.160.221.236:8087',
-      //   changeOrigin: true,
-      //   ws: false,
-      //   pathRewrite: {
-      //     '^/': '',
-      //   },
-      // },
       '/': {
-        target: 'https://yzt.zsnetwork.com:8085',
+        target: 'http://117.160.221.236:8087',
         changeOrigin: true,
         ws: false,
-        secure: false,
-        headers: {
-          Referer: 'https://yzt.zsnetwork.com:8085'
-        },
-        logLevel: 'debug',
         pathRewrite: {
           '^/': '',
         },
       },
+      // '/': {
+      //   target: 'https://yzt.zsnetwork.com:8085',
+      //   changeOrigin: true,
+      //   ws: false,
+      //   secure: false,
+      //   headers: {
+      //     Referer: 'https://yzt.zsnetwork.com:8085'
+      //   },
+      //   logLevel: 'debug',
+      //   pathRewrite: {
+      //     '^/': '',
+      //   },
+      // },
     },
   },
   configureWebpack: {

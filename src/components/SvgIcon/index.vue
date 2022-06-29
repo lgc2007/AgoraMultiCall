@@ -4,7 +4,7 @@
  * @Autor: lgc
  * @Date: 2022-06-17 11:00:04
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-17 14:53:51
+ * @LastEditTime: 2022-06-28 19:28:33
 -->
 
 <template>
@@ -49,7 +49,7 @@ export default {
 
     svgClass() {
       if (this.className) {
-        return `svg-icon ${this.className}`;
+        return `svg-icon ${this.iconClass} ${this.className}`;
       }
 
       return 'svg-icon';
