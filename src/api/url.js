@@ -4,7 +4,7 @@
  * @Autor: lgc
  * @Date: 2022-06-01 10:02:10
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-27 17:55:30
+ * @LastEditTime: 2022-06-30 09:24:03
  */
 import request from '@/utils/request';
 export function login(data) {
