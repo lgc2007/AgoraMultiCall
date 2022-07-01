@@ -6,7 +6,9 @@
       right-text="离开"
       @click-left="toggleCamera"
       @click-right="handleLeave"
-    />
+    >
+      <template #left> <svg-icon icon-class="switch_camera" />{{ switchCameraText }} </template>
+    </van-nav-bar>
     <!-- <div class="top-operate">
       <div class="top-operate-left" @click="toggleCamera">
         <van-button icon="exchange" type="info">切换</van-button>
@@ -95,11 +97,10 @@
             v-show="!streamFallbackList.includes(onlineHost.agoraId)"
             v-player="playList.find((e) => e.uid === onlineHost.agoraId)"
             class="player-vision"
-          >
-          </div>
-          <div>
-            <div class="player-bottom">
-              <div class="player-bottom-left">
+          ></div>
+          <div class="">
+            <div class="box-bottom">
+              <div class="box-bottom-left">
                 <svg-icon icon-class="host" />
                 <p>
                   {{ renderUser(onlineHost.agoraId) || "you"
@@ -108,7 +109,7 @@
                   </span>
                 </p>
               </div>
-              <div class="player-bottom-right">
+              <div class="box-bottom-right">
                 <svg-icon
                   :icon-class="onlineHost.videoState ? 'shipin' : 'shipin_off'"
                   class-name="microphone"
@@ -148,14 +149,14 @@
             v-player="playList.find((e) => e.uid === online.agoraId)"
             class="player-vision"
           ></div>
-          <div class="player-bottom">
-            <div class="player-bottom-left">
+          <div class="box-bottom">
+            <div class="box-bottom-left">
               <p>
                 {{ renderUser(online.agoraId) || "you"
                 }}<span v-if="online.agoraId === uid && inMeeting"> (你) </span>
               </p>
             </div>
-            <div class="player-bottom-right">
+            <div class="box-bottom-right">
               <svg-icon
                 :icon-class="online.videoState ? 'shipin' : 'shipin_off'"
                 class-name="microphone"
@@ -198,8 +199,8 @@
                 v-player="playList.find((e) => e.uid === online.agoraId)"
                 class="player-vision"
               ></div>
-              <div class="player-bottom">
-                <div class="player-bottom-left">
+              <div class="box-bottom">
+                <div class="box-bottom-left">
                   <p>
                     {{ renderUser(online.agoraId) || "you"
                     }}<span v-if="online.agoraId === uid && inMeeting">
@@ -207,7 +208,7 @@
                     </span>
                   </p>
                 </div>
-                <div class="player-bottom-right">
+                <div class="box-bottom-right">
                   <svg-icon
                     :icon-class="online.videoState ? 'shipin' : 'shipin_off'"
                     class-name="microphone"
@@ -289,7 +290,7 @@
           <van-search
             v-model="searchValue"
             show-action
-            placeholder="请输入搜索关键词"
+            placeholder="请输入参会人员名称"
             @search="onSearch"
             @cancel="onCancel"
           />
@@ -308,7 +309,7 @@
               </div>
               <div class="item-right">
                 <svg-icon
-                  :icon-class="item.videoState ? 'shipin' : 'shipin_off'"
+                  :icon-class="(item.videoState || !item.isOnline) ? 'shipin' : 'shipin_off'"
                 />
                 <svg-icon
                   :icon-class="
@@ -513,6 +514,7 @@ export default {
       popupShow: false,
       searchValue: '',
       swiperKey: Math.random().toString(36).substr(2),
+      switchCameraText: '前置',
     };
   },
   computed: {
@@ -1046,9 +1048,11 @@ export default {
       console.log(cameraList, track);
       if (this.toggle < cameraList.length) {
         track.setDevice(cameraList[this.toggle].deviceId);
+        this.switchCameraText = '前置';
         this.toggle += 1;
       } else {
         this.toggle = 0;
+        this.switchCameraText = '后置';
         track.setDevice(cameraList[this.toggle].deviceId);
       }
       // this.toggle = !this.toggle;
@@ -1322,300 +1326,319 @@ video.agora_video_player {
 }
 </style>
 <style lang="scss" scoped>
-.meet {
-  padding-top: 50px;
-}
 $main_color: #099dfd;
-// @import "@/styles/meet/player.scss";
-.microphone {
-  font-size: 30px;
-}
-.top-operate {
-  display: flex;
-  justify-items: center;
-  justify-content: space-between;
-  align-items: center;
-  position: fixed;
-  width: 100%;
-  height: 50px;
-  top: 0;
-  background-color: #fff;
-}
-.notify {
-  display: flex;
-  justify-items: center;
-  justify-content: space-around;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  right: 0;
-  background-color: #fff;
-  border-radius: 0 0 0 10px;
-  width: 100%;
-  height: 50px;
-  z-index: 100;
-}
+.meet-wrap {
+  .meet {
+    padding-top: 32px;
+    padding-bottom: 35px;
+    background-color: #F7F7F9;
+  }
 
-.tabbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  display: flex;
-  box-sizing: content-box;
-  width: 100%;
-  height: 100px;
-  padding-bottom: env(safe-area-inset-bottom);
-  background-color: #fff;
-  .tabbar-item {
+  // @import "@/styles/meet/player.scss";
+  .microphone {
+    font-size: 30px;
+  }
+  .top-operate {
     display: flex;
-    flex: 1;
-    justify-content: center;
-    color: #646566;
-    font-size: 3.2vw;
-    line-height: 1;
-    cursor: pointer;
+    justify-items: center;
+    justify-content: space-between;
     align-items: center;
-    flex-direction: column;
-    .tabbar-item-icon {
-      position: relative;
-      margin-bottom: 1.06667vw;
-      font-size: 5.86667vw;
-      .video,
-      .audio {
-        color: #039ce2;
-      }
-      .audio_off, .shipin_off {
-        color: #333;
-      }
-      .user {
-        color: #606266;
-      }
-    }
+    position: fixed;
+    width: 100%;
+    height: 50px;
+    top: 0;
+    background-color: #fff;
   }
-}
-.player-host {
-  height: 340px;
-}
-.player {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  width: 100vw;
-  .user-vision {
-    width: 50%;
-    height: 340px;
-    position: relative;
-    margin-bottom: 10px;
-    padding: 0 10px;
-    box-sizing: border-box;
-    .player-vision {
-      width: 100%;
-      height: 100%;
-    }
-  }
-  .isSpeech {
-    order: -1;
-  }
-}
-.online-wrap {
-  width: 100vw;
-  animation: text 30s infinite linear;
-  margin-top: 20px;
-  display: flex;
-  flex-wrap: nowrap;
-  .is-speech {
-    width: 50vw;
-    flex-shrink: 0;
-  }
-  .user-vision {
-    // width: 50%;
-    height: 340px;
-    position: relative;
-    margin-bottom: 10px;
-    padding: 0 10px;
-    box-sizing: border-box;
-    .player-vision {
-      width: 100%;
-      height: 100%;
-    }
-  }
-  .van-swipe {
-    flex-grow: 1;
-    // max-width: 50vw;
-    // max-width: 100vw;
-  }
-  .van-swipe-item {
-    // max-width: 50vw;
-    // display: flex;
-  }
-  .user-vision {
-    // width: 50vw;
-  }
-}
-.player-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 2;
-  position: absolute;
-  bottom: 0;
-  left: 10px;
-  right: 10px;
-  // transform: translateX(-50%);
-  flex-direction: row;
-  cursor: pointer;
-  // border-radius: 8px;
-  color: #fff;
-  padding: 2px 10px;
-  box-sizing: border-box;
-  background-color: rgba(#000, 0.2);
-  .player-bottom-left,
-  .player-bottom-right {
+  .notify {
     display: flex;
+    justify-items: center;
+    justify-content: space-around;
     align-items: center;
-  }
-  .host {
-    color: #faab0c;
-    margin-right: 5px;
-  }
-  .shipin,
-  .audio {
-    color: #099dfd;
-  }
-  .shipin_off,
-  .audio_off {
-    color: #fff;
-  }
-  .shipin,
-  .shipin_off {
-    margin-right: 10px;
-  }
-}
-.onlyOneRoate {
-  width: 50vw;
-  margin-left: inherit;
-  margin-right: inherit;
-}
-.swiper-container {
-  // width: 100vw;
-  // animation:text 30s infinite  linear;
-  // margin-top: 20px;
-  // display: flex;
-  // flex-wrap: nowrap;
-}
-.user-list {
-  z-index: 10;
-  position: fixed;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: #fff;
-  padding: 10px 14px;
-  border-radius: 10px 0 0 10px;
-
-  p {
-    text-indent: 10px;
-    color: #999;
+    position: fixed;
+    top: 0;
+    right: 0;
+    background-color: #fff;
+    border-radius: 0 0 0 10px;
+    width: 100%;
+    height: 50px;
+    z-index: 100;
   }
 
-  ul {
-    margin: 0;
-    padding: 0;
-
-    li {
-      position: relative;
-      margin: 4px;
-      padding: 4px 80px 4px 28px;
-      list-style: none;
+  .tabbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    display: flex;
+    box-sizing: content-box;
+    width: 100%;
+    height: 146px;
+    padding-bottom: env(safe-area-inset-bottom);
+    background-color: #fff;
+    .tabbar-item {
+      display: flex;
+      flex: 1;
+      justify-content: center;
+      color: #646566;
+      // font-size: 3.2vw;
+      line-height: 1;
       cursor: pointer;
-      border-radius: 8px;
-      color: $main_color;
-
-      &:hover {
-        background-color: #eee;
+      align-items: center;
+      flex-direction: column;
+      .tabbar-item-icon {
+        position: relative;
+        font-size: 5.86667vw;
+        margin-bottom: 10px;
+        .svg-icon {
+          font-size: 65px;
+        }
+        .video,
+        .audio {
+          color: #039ce2;
+        }
+        .audio_off,
+        .shipin_off {
+          color: #333;
+        }
+        .user {
+          color: #606266;
+        }
       }
-
-      &:before {
-        position: absolute;
-        left: 6px;
-        top: 50%;
-        transform: translateY(-50%);
-        display: block;
-        content: "";
-        width: 16px;
-        height: 16px;
-        background: center / contain no-repeat url("~@/assets/yonghu.svg");
-      }
-
-      .audio-dot-local {
-        position: absolute;
-        right: 45px;
-        top: 50%;
-        transform: translateY(-50%);
-      }
-
-      .pin-button-local {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
+      .tabbar-item-text {
+        font-size: 38px;
+        font-family: Source Han Sans CN;
+        font-weight: 500;
+        color: #4D4D4D;
       }
     }
   }
-}
-.user-title {
-  text-align: center;
-  // font-weight: bold;
-  line-height: 16px;
-  font-size: 16px;
-  padding: 5px 10px;
-}
-.search-list {
-  .search-item {
+  .player-host {
+    height: 488px;
+  }
+  .user-vision {
+    width: 334px;
+    height: 488px;
+    position: relative;
+    margin-bottom: 10px;
+    margin: 0 10px;
+    background: #dae2e6;
+    // box-sizing: border-box;
+    .player-vision {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .player {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100vw;
+    .user-vision {
+      width: 334px;
+    }
+    .isSpeech {
+      order: -1;
+    }
+  }
+  .online-wrap {
+    width: 100vw;
+    animation: text 30s infinite linear;
+    margin-top: 20px;
+    display: flex;
+    .is-speech {
+      flex-shrink: 0;
+    }
+    .van-swipe {
+      flex-grow: 1;
+    }
+    .user-vision {
+      // margin: 0;
+    }
+  }
+  .box-bottom {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: relative;
-    padding: 10px 16px;
-    &:after {
-      position: absolute;
-      box-sizing: border-box;
-      content: " ";
-      pointer-events: none;
-      right: 16px;
-      bottom: 0;
-      left: 16px;
-      border-bottom: 1px solid #ebedf0;
-      transform: scaleY(0.5);
+    z-index: 2;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 84px;
+    padding-top: 20px;
+    padding-left: 20px;
+    padding-right: 26px;
+    flex-direction: row;
+    cursor: pointer;
+    color: #fff;
+    box-sizing: border-box;
+    background: linear-gradient(0deg, #3a3a3a 0%, rgba(77, 77, 77, 0) 100%);
+    border-radius: 0px 0px 10px 10px;
+    .box-bottom-left,
+    .box-bottom-right {
+      display: flex;
+      align-items: center;
     }
-    .item-right {
-      .svg-icon {
-        font-size: 16px;
-        color: #d9d9d9;
-      }
-      .audio,
-      .audio_off {
-        margin-left: 10px;
-      }
+    .host {
+      font-size: 38px;
+      color: #faab0c;
+      margin-right: 5px;
     }
-    .yonghu {
-      color: #d9d9d9;
+    .shipin,
+    .audio {
+      color: #099dfd;
+    }
+    .shipin_off,
+    .audio_off {
+      color: #fff;
+    }
+    .shipin,
+    .shipin_off {
+      margin-right: 10px;
+    }
+    p {
+      font-size: 30px;
     }
   }
-  .searchOnLine {
-    .item-right {
-      .shipin,
-      .audio {
-        color: #099dfd;
-      }
-      .shipin_off,
-      .audio_off {
-        color: #000000;
+  .onlyOneRoate {
+    width: 334px;
+    height: 488px;
+    margin-left: inherit;
+    margin-right: inherit;
+  }
+  .swiper-container {
+    // width: 100vw;
+    // animation:text 30s infinite  linear;
+    // margin-top: 20px;
+    // display: flex;
+    // flex-wrap: nowrap;
+  }
+  .user-list {
+    z-index: 10;
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #fff;
+    padding: 10px 14px;
+    border-radius: 10px 0 0 10px;
+
+    p {
+      text-indent: 10px;
+      color: #999;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+
+      li {
+        position: relative;
+        margin: 4px;
+        padding: 4px 80px 4px 28px;
+        list-style: none;
+        cursor: pointer;
+        border-radius: 8px;
+        color: $main_color;
+
+        &:hover {
+          background-color: #eee;
+        }
+
+        &:before {
+          position: absolute;
+          left: 6px;
+          top: 50%;
+          transform: translateY(-50%);
+          display: block;
+          content: "";
+          width: 16px;
+          height: 16px;
+          background: center / contain no-repeat url("~@/assets/yonghu.svg");
+        }
+
+        .audio-dot-local {
+          position: absolute;
+          right: 45px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        .pin-button-local {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
       }
     }
-    .yonghu {
-      color: #faab0c;
+  }
+  .user-title {
+    text-align: center;
+    // font-weight: bold;
+    line-height: 32px;
+    font-size: 32px;
+    padding: 10px 20px;
+  }
+  .search-list {
+    .search-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      padding: 10px 16px;
+      &:after {
+        position: absolute;
+        box-sizing: border-box;
+        content: " ";
+        pointer-events: none;
+        right: 16px;
+        bottom: 0;
+        left: 16px;
+        border-bottom: 1px solid #ebedf0;
+        transform: scaleY(0.5);
+      }
+      .item-right {
+        .svg-icon {
+          font-size: 32px;
+          color: #d9d9d9;
+        }
+        .audio,
+        .audio_off {
+          margin-left: 20px;
+        }
+      }
+      .yonghu {
+        color: #d9d9d9;
+      }
+    }
+    .searchOnLine {
+      .item-right {
+        .shipin,
+        .audio {
+          color: #099dfd;
+        }
+        .shipin_off,
+        .audio_off {
+          color: #000000;
+        }
+      }
+      .yonghu {
+        color: #faab0c;
+      }
+    }
+  }
+  ::v-deep {
+    .van-nav-bar__right {
+      .van-nav-bar__text {
+        color: #ff0000;
+      }
+    }
+    .van-nav-bar__left {
+      color: #039ce2;
+      .switch_camera {
+        margin-right: 5px;
+      }
     }
   }
 }

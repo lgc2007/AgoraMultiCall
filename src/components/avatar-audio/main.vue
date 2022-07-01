@@ -1,7 +1,12 @@
 <template>
   <div
-    class="avatar-icon"
-  ></div>
+    class="avatar-icon-new"
+  >
+    <div class="svg-wrap">
+      <svg-icon icon-class="host" />
+    </div>
+
+  </div>
 </template>
 
 <script>
@@ -92,5 +97,30 @@ $main_interval=0.6s
     z-index 1
     //transition all $main_interval ease-in-out
   }
+}
+</style>
+<style lang="scss" scoped>
+.avatar-icon-new {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 130px;
+  left: 0;
+  right: 0;
+  .svg-wrap {
+    // width: 70px;
+    // height: 70px;
+    // border-radius: 50%;
+    // background-color: #099dfd;
+  //   display: flex;
+  // justify-content: center;
+  // align-items: center;
+  .host {
+    color: #099dfd;
+    font-size: 134px;
+  }
+  }
+
 }
 </style>
