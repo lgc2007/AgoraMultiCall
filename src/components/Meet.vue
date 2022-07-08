@@ -7,7 +7,9 @@
       @click-left="toggleCamera"
       @click-right="handleLeave"
     >
-      <template #left> <svg-icon icon-class="switch_camera" />{{ switchCameraText }} </template>
+      <template #left>
+        <svg-icon icon-class="switch_camera" />{{ switchCameraText }}
+      </template>
     </van-nav-bar>
     <!-- <div class="top-operate">
       <div class="top-operate-left" @click="toggleCamera">
@@ -58,6 +60,7 @@
             @video-close="handleVideoClose"
           ></agora-video-sender>
           <agora-video-receiver
+            :player-config="{ fit: 'fill' }"
             customization-player
             :refuse="refuseList"
             @video-ready="handleRemoteVideoReady"
@@ -99,8 +102,8 @@
             class="player-vision"
           ></div>
           <div class="">
-            <div class="box-bottom">
-              <div class="box-bottom-left">
+            <div class="video-bottom">
+              <div class="video-bottom-left">
                 <svg-icon icon-class="host" />
                 <p>
                   {{ renderUser(onlineHost.agoraId) || "you"
@@ -109,7 +112,7 @@
                   </span>
                 </p>
               </div>
-              <div class="box-bottom-right">
+              <div class="video-bottom-right">
                 <svg-icon
                   :icon-class="onlineHost.videoState ? 'shipin' : 'shipin_off'"
                   class-name="microphone"
@@ -140,23 +143,14 @@
             }).specialFlag,
           }"
         >
-          <div
-            v-if="
-              playList.find((e) => e.uid === online.agoraId) &&
-                online.videoState
-            "
-            v-show="!streamFallbackList.includes(online.agoraId)"
-            v-player="playList.find((e) => e.uid === online.agoraId)"
-            class="player-vision"
-          ></div>
-          <div class="box-bottom">
-            <div class="box-bottom-left">
+          <div class="video-bottom">
+            <div class="video-bottom-left">
               <p>
                 {{ renderUser(online.agoraId) || "you"
                 }}<span v-if="online.agoraId === uid && inMeeting"> (你) </span>
               </p>
             </div>
-            <div class="box-bottom-right">
+            <div class="video-bottom-right">
               <svg-icon
                 :icon-class="online.videoState ? 'shipin' : 'shipin_off'"
                 class-name="microphone"
@@ -167,6 +161,15 @@
               />
             </div>
           </div>
+          <div
+            v-if="
+              playList.find((e) => e.uid === online.agoraId) &&
+                online.videoState === 1
+            "
+            v-show="!streamFallbackList.includes(online.agoraId)"
+            v-player="playList.find((e) => e.uid === online.agoraId)"
+            class="player-vision"
+          ></div>
           <avatar-audio v-if="!online.videoState" />
         </div>
         <!-- 轮播用户 -->
@@ -174,13 +177,13 @@
           v-if="rotateList.length"
           :key="swiperKey"
           :options="swiperOption"
-          :class="{ onlyOneRoate: rotateList.length === 1 }"
+          :class="{ onlyOneRoate: speechList.length === 1 }"
           class="mySwiper swiper"
         >
           <swiper-slide v-for="online in rotateList" :key="online.id">
             <div
               ref="cur"
-              class="swiper-wrapper user-vision"
+              class="user-vision"
               :class="{
                 isSpeech: !!meetingUsers.find((e) => {
                   return e.agoraId === online.agoraId;
@@ -199,8 +202,8 @@
                 v-player="playList.find((e) => e.uid === online.agoraId)"
                 class="player-vision"
               ></div>
-              <div class="box-bottom">
-                <div class="box-bottom-left">
+              <div class="video-bottom">
+                <div class="video-bottom-left">
                   <p>
                     {{ renderUser(online.agoraId) || "you"
                     }}<span v-if="online.agoraId === uid && inMeeting">
@@ -208,7 +211,7 @@
                     </span>
                   </p>
                 </div>
-                <div class="box-bottom-right">
+                <div class="video-bottom-right">
                   <svg-icon
                     :icon-class="online.videoState ? 'shipin' : 'shipin_off'"
                     class-name="microphone"
@@ -309,7 +312,9 @@
               </div>
               <div class="item-right">
                 <svg-icon
-                  :icon-class="(item.videoState || !item.isOnline) ? 'shipin' : 'shipin_off'"
+                  :icon-class="
+                    item.videoState || !item.isOnline ? 'shipin' : 'shipin_off'
+                  "
                 />
                 <svg-icon
                   :icon-class="
@@ -501,10 +506,11 @@ export default {
       dataList: [],
       toggle: 0,
       swiperOption: {
+        // width: 334,
         watchOverflow: true,
         slidesPerView: 1,
-        loop: true,
-        allowTouchMove: false, // 鼠标无法拖动，手机也无法滑动。
+        loop: false,
+        allowTouchMove: true, // 鼠标无法拖动，手机也无法滑动。
         autoplay: {
           delay: 10000,
           stopOnLastSlide: false,
@@ -660,16 +666,22 @@ export default {
         this.playLocalVideoOnTopBanner();
       }
     },
-    speechList(newV) {
-      if (newV.length === 0) {
-        this.swiperOption.slidesPerView = 2;
-      } else {
-        this.swiperOption.slidesPerView = 1;
-      }
-      this.$nextTick(() => {
-        this.swiperKey = Math.random().toString(36).substr(2); // 修改key，swiper重新渲染。
-      });
-    },
+    // speechList(newV) {
+    //   console.log(newV, newV.length);
+    //   if (newV.length === 0) {
+    //     console.log(222222222);
+    //     this.$set(this.swiperOption, 'slidesPerView', 2);
+    //     // this.swiperOption.slidesPerView = 2;
+    //   } else {
+    //     console.log(11111111);
+    //     this.$set(this.swiperOption, 'slidesPerView', 1);
+    //     console.log(this.swiperOption);
+    //     // this.swiperOption.slidesPerView = 1;
+    //   }
+    //   this.$nextTick(() => {
+    //     this.swiperKey = Math.random().toString(36).substr(2); // 修改key，swiper重新渲染。
+    //   });
+    // },
     rotateList: {
       immediate: true,
       handler(newV) {
@@ -677,8 +689,20 @@ export default {
         if (newV.length < 2) {
           this.swiperOption.slidesPerView = 1;
           this.swiperOption.loop = false;
+          this.swiperOption.autoplay = false;
         } else {
-          this.swiperOption.slidesPerView = 2;
+          console.log('speechList:', this.speechList, this.speechList.length);
+          if (this.speechList.length === 0) {
+            this.swiperOption.slidesPerView = 2;
+            // this.swiperOption.loop = true;
+          } else {
+            this.swiperOption.slidesPerView = 1;
+          }
+          this.swiperOption.autoplay = {
+            delay: 10000,
+            stopOnLastSlide: false,
+            disableOnInteraction: false,
+          };
           this.swiperOption.loop = true;
         }
         this.$nextTick(() => {
@@ -1144,12 +1168,12 @@ export default {
         if (rotate) {
           switch (reason.action) {
             case 'EXIT_MEETING':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId: reason.userId, isOnline: 0 },
               ]);
               break;
             case 'ATTEND_MEETING':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 {
                   userId: reason.userId,
                   isOnline: 1,
@@ -1159,27 +1183,27 @@ export default {
               ]);
               break;
             case 'TURN_OFF_VIDEO':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId: reason.userId, videoState: 0 },
               ]);
               break;
             case 'TURN_ON_VIDEO':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId: reason.userId, videoState: 1 },
               ]);
               break;
             case 'TURN_OFF_AUDIO':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId: reason.userId, audioState: 0 },
               ]);
               break;
             case 'TURN_ON_AUDIO':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId: reason.userId, audioState: 1 },
               ]);
               break;
             case 'ATTEND_SPEECHSEAT':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 ...rotate.map((item, index) => {
                   return { ...item, isSpeech: 0 };
                 }),
@@ -1197,7 +1221,7 @@ export default {
               }
               break;
             case 'EXIT_SPEECHSEAT':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 ...rotate,
                 {
                   isSpeech: 0,
@@ -1217,12 +1241,12 @@ export default {
         } else {
           switch (action) {
             case 'EXIT_MEETING':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId, isOnline: 0 },
               ]);
               break;
             case 'ATTEND_MEETING':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId, isOnline: 1, audioState, videoState },
               ]);
               break;
@@ -1234,7 +1258,7 @@ export default {
                 // 关闭本地视频
                 this.cameraIsClosed = true;
               }
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId, videoState: 0 },
               ]);
               break;
@@ -1247,7 +1271,7 @@ export default {
                 this.cameraIsClosed = false;
                 this.$refs.videoSender.start(true);
               }
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId, videoState: 1 },
               ]);
               break;
@@ -1256,7 +1280,7 @@ export default {
                 // 关闭音频
                 this.mute = true;
               }
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId, audioState: 0 },
               ]);
               break;
@@ -1266,12 +1290,12 @@ export default {
                 this.mute = false;
                 this.$refs.audioSender.start(true);
               }
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 { userId, audioState: 1 },
               ]);
               break;
             case 'ATTEND_SPEECHSEAT':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 {
                   isSpeech: 1,
                   audioState: action.audioState,
@@ -1286,7 +1310,7 @@ export default {
               }
               break;
             case 'EXIT_SPEECHSEAT':
-              this.$store.dispatch('user/UPDATE_MEETING', [
+              this.$store.commit('user/UPDATE_USER_LIST', [
                 {
                   isSpeech: 0,
                   audioState: action.audioState,
@@ -1331,7 +1355,7 @@ $main_color: #099dfd;
   .meet {
     padding-top: 32px;
     padding-bottom: 35px;
-    background-color: #F7F7F9;
+    background-color: #f7f7f9;
   }
 
   // @import "@/styles/meet/player.scss";
@@ -1408,7 +1432,7 @@ $main_color: #099dfd;
         font-size: 38px;
         font-family: Source Han Sans CN;
         font-weight: 500;
-        color: #4D4D4D;
+        color: #4d4d4d;
       }
     }
   }
@@ -1445,6 +1469,7 @@ $main_color: #099dfd;
     animation: text 30s infinite linear;
     margin-top: 20px;
     display: flex;
+    justify-content: space-between;
     .is-speech {
       flex-shrink: 0;
     }
@@ -1454,8 +1479,11 @@ $main_color: #099dfd;
     .user-vision {
       // margin: 0;
     }
+    .swiper-wrapper {
+      width: 334px;
+    }
   }
-  .box-bottom {
+  .video-bottom {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1474,8 +1502,8 @@ $main_color: #099dfd;
     box-sizing: border-box;
     background: linear-gradient(0deg, #3a3a3a 0%, rgba(77, 77, 77, 0) 100%);
     border-radius: 0px 0px 10px 10px;
-    .box-bottom-left,
-    .box-bottom-right {
+    .video-bottom-left,
+    .video-bottom-right {
       display: flex;
       align-items: center;
     }
@@ -1497,14 +1525,19 @@ $main_color: #099dfd;
       margin-right: 10px;
     }
     p {
-      font-size: 30px;
+      font-size: 24px;
     }
   }
   .onlyOneRoate {
     width: 334px;
     height: 488px;
-    margin-left: inherit;
-    margin-right: inherit;
+    margin: 0 10px;
+    .swiper-wrapper {
+      // width: 100vw;
+    }
+
+    // margin-left: inherit;
+    // margin-right: inherit;
   }
   .swiper-container {
     // width: 100vw;
@@ -1638,6 +1671,15 @@ $main_color: #099dfd;
       color: #039ce2;
       .switch_camera {
         margin-right: 5px;
+      }
+    }
+    .onlyOneRoate {
+      .swiper-slide {
+        // width: 100% !important;
+         .user-vision {
+          margin: 0;
+          // width: 100%;
+    }
       }
     }
   }
