@@ -152,12 +152,15 @@ const actions = {
         .then(({ obj: { records }}) => {
           if (records && records.length) {
             if (records.length > 1) {
+              const obj = records.find(item => {
+                return item.meetingName === '网页会议测试';
+              });
               commit('setState', {
-                meetingPage: (records && records[records.length - 1]) || []
+                meetingPage: obj || {}
               });
             } else {
               commit('setState', {
-                meetingPage: (records && records[0]) || []
+                meetingPage: (records && records[0]) || {}
               });
             }
           }

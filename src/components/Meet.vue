@@ -509,6 +509,7 @@ export default {
         // width: 334,
         watchOverflow: true,
         slidesPerView: 1,
+        slidesPerGroup: 2,
         loop: false,
         allowTouchMove: true, // 鼠标无法拖动，手机也无法滑动。
         autoplay: {
@@ -693,8 +694,7 @@ export default {
         } else {
           console.log('speechList:', this.speechList, this.speechList.length);
           if (this.speechList.length === 0) {
-            this.swiperOption.slidesPerView = 2;
-            // this.swiperOption.loop = true;
+            // this.swiperOption.slidesPerView = 2;
           } else {
             this.swiperOption.slidesPerView = 1;
           }
@@ -703,7 +703,7 @@ export default {
             stopOnLastSlide: false,
             disableOnInteraction: false,
           };
-          this.swiperOption.loop = true;
+          // this.swiperOption.loop = true;
         }
         this.$nextTick(() => {
           this.swiperKey = Math.random().toString(36).substr(2); // 修改key，swiper重新渲染。
@@ -1438,6 +1438,7 @@ $main_color: #099dfd;
   }
   .player-host {
     height: 488px;
+    justify-content: center;
   }
   .user-vision {
     width: 334px;
@@ -1463,6 +1464,10 @@ $main_color: #099dfd;
     .isSpeech {
       order: -1;
     }
+  }
+  .player-host {
+    height: 488px;
+    justify-content: center;
   }
   .online-wrap {
     width: 100vw;

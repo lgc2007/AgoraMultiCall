@@ -4,7 +4,7 @@
  * @Autor: lgc
  * @Date: 2022-05-19 15:04:26
  * @LastEditors: lgc
- * @LastEditTime: 2022-06-27 18:00:39
+ * @LastEditTime: 2022-07-16 17:20:35
  */
 'use strict';
 const path = require('path');
@@ -33,27 +33,27 @@ module.exports = {
       errors: true,
     },
     proxy: {
-      '/': {
-        target: 'http://117.160.221.236:8087',
-        changeOrigin: true,
-        ws: false,
-        pathRewrite: {
-          '^/': '',
-        },
-      },
       // '/': {
-      //   target: 'https://yzt.zsnetwork.com:8085',
+      //   target: 'http://117.160.221.236:8087',
       //   changeOrigin: true,
       //   ws: false,
-      //   secure: false,
-      //   headers: {
-      //     Referer: 'https://yzt.zsnetwork.com:8085'
-      //   },
-      //   logLevel: 'debug',
       //   pathRewrite: {
       //     '^/': '',
       //   },
       // },
+      '/': {
+        target: 'https://yzt.zsnetwork.com:8085',
+        changeOrigin: true,
+        ws: false,
+        secure: false,
+        headers: {
+          Referer: 'https://yzt.zsnetwork.com:8085'
+        },
+        logLevel: 'debug',
+        pathRewrite: {
+          '^/': '',
+        },
+      },
     },
   },
   configureWebpack: {
