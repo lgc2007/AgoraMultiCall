@@ -509,7 +509,7 @@ export default {
         // width: 334,
         watchOverflow: true,
         slidesPerView: 1,
-        slidesPerGroup: 2,
+        // slidesPerGroup: 2,
         loop: false,
         allowTouchMove: true, // 鼠标无法拖动，手机也无法滑动。
         autoplay: {
@@ -694,7 +694,7 @@ export default {
         } else {
           console.log('speechList:', this.speechList, this.speechList.length);
           if (this.speechList.length === 0) {
-            // this.swiperOption.slidesPerView = 2;
+            this.swiperOption.slidesPerView = 2;
           } else {
             this.swiperOption.slidesPerView = 1;
           }
@@ -1485,7 +1485,7 @@ $main_color: #099dfd;
       // margin: 0;
     }
     .swiper-wrapper {
-      width: 334px;
+      // width: 334px;
     }
   }
   .video-bottom {
